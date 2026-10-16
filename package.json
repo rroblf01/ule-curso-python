@@ -31,7 +31,8 @@
 		"version": "2026.7.3",
 		"packages": [
 			"jedi",
-			"pydantic"
+			"pydantic",
+			"pydantic-ai-slim[openai]==2.57.0"
 		]
 	}
 }
