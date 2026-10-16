@@ -5,7 +5,7 @@ order: 2
 minutes: 4
 ---
 
-En este curso **no hace falta instalar nada**: Python se ejecuta dentro de tu navegador gracias a [PyScript](https://pyscript.net), que usa una versión de Python compilada para la web. La primera vez tarda unos segundos en descargarse (unos 10 MB); después va rápido.
+En este curso **no hace falta instalar nada**: Python se ejecuta dentro de tu navegador gracias a [PyScript](https://pyscript.net), que usa una versión de Python compilada para la web. Empieza a cargarse solo al abrir la página (son unos 15 MB la primera vez; después queda guardado en el navegador). En el panel de la izquierda verás cuándo está **Listo**.
 
 ## Cada bloque de código es un editor
 

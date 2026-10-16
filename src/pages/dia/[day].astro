@@ -96,7 +96,7 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 </Base>
 
 <script>
-	import { isRunnableBlock, mountPlaygrounds, mountStatusPanel } from '../../scripts/python';
+	import { bootPythonWhenIdle, isRunnableBlock, mountPlaygrounds, mountStatusPanel } from '../../scripts/python';
 
 	const root = document.querySelector<HTMLElement>('[data-lessons]')!;
 	const lessons = [...root.querySelectorAll<HTMLElement>('[data-lesson]')];
@@ -122,7 +122,10 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 	}
 
 	const statusPanel = root.querySelector<HTMLElement>('[data-python-status]');
-	if (statusPanel) mountStatusPanel(statusPanel);
+	if (statusPanel) {
+		mountStatusPanel(statusPanel);
+		bootPythonWhenIdle();
+	}
 
 	show(decodeURIComponent(location.hash.slice(1)), false);
 	window.addEventListener('hashchange', () => show(decodeURIComponent(location.hash.slice(1)), true));

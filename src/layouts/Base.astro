@@ -42,5 +42,11 @@ const {
 	<body>
 		<Navbar currentDay={currentDay} />
 		<slot />
+		<script>
+			import { preloadPython } from '../scripts/python/preload';
+
+			// Pages without editors only warm up the browser cache; day pages boot Python themselves.
+			if (!document.querySelector('[data-python-status]')) preloadPython();
+		</script>
 	</body>
 </html>

@@ -4,9 +4,8 @@
  * notebook.
  */
 
-const PYSCRIPT_VERSION = '2026.7.3';
-const PYSCRIPT_URL = `https://pyscript.net/releases/${PYSCRIPT_VERSION}/core.js`;
-const RUNNER_URL = '/python/runner.py';
+import { PYODIDE_URL, PYSCRIPT_URL, RUNNER_URL } from './assets';
+
 const LOAD_TIMEOUT_MS = 90_000;
 const HARD_STOP_AFTER_MS = 3_000;
 
@@ -79,6 +78,7 @@ class PythonRuntime extends EventTarget {
 	private running = false;
 	private toolBusy = false;
 	private jediReady = false;
+	private warming: Promise<unknown> | null = null;
 	private hardStop: ReturnType<typeof setTimeout> | null = null;
 	private restartResolve: ((result: RunResult) => void) | null = null;
 
@@ -121,6 +121,7 @@ class PythonRuntime extends EventTarget {
 		const script = document.createElement('script');
 		script.type = 'py';
 		script.setAttribute('worker', '');
+		script.setAttribute('config', JSON.stringify({ interpreter: PYODIDE_URL }));
 		script.src = RUNNER_URL;
 		script.hidden = true;
 
@@ -159,7 +160,7 @@ class PythonRuntime extends EventTarget {
 		this.setStatus('ready');
 
 		// Load jedi in the background so autocompletion is ready when needed.
-		this.tool(async () => {
+		this.warming = this.tool(async () => {
 			await worker.sync.warmup();
 			this.jediReady = true;
 		}).catch(() => {});
@@ -218,6 +219,7 @@ class PythonRuntime extends EventTarget {
 		this.worker = null;
 		this.starting = null;
 		this.jediReady = false;
+		this.warming = null;
 		this.queue = Promise.resolve();
 		this.restartResolve?.({ status: 'restarted', error: null });
 		this.dispatchEvent(new Event('restarted'));
@@ -246,6 +248,15 @@ class PythonRuntime extends EventTarget {
 		return Boolean(this.worker) && this.jediReady && !this.running && !this.toolBusy;
 	}
 
+	/** Like canAssist, but if jedi is still loading wait a little for it. */
+	private async assistReady(waitMs = 1500) {
+		if (!this.worker || this.running) return false;
+		if (!this.jediReady && this.warming) {
+			await Promise.race([this.warming, new Promise((resolve) => setTimeout(resolve, waitMs))]);
+		}
+		return this.canAssist;
+	}
+
 	async check(code: string): Promise<SyntaxProblem | null> {
 		if (!this.worker || this.running) return null;
 		// Unlike the other helpers, wait for our turn instead of skipping: it is cheap and important.
@@ -256,7 +267,7 @@ class PythonRuntime extends EventTarget {
 	}
 
 	async complete(code: string, line: number, col: number): Promise<JediCompletion[] | null> {
-		if (!this.canAssist) return null;
+		if (!(await this.assistReady())) return null;
 		const json = await this.tool<string>(() => this.worker!.sync.complete(code, line, col));
 		return json ? JSON.parse(json) : null;
 	}
@@ -268,13 +279,13 @@ class PythonRuntime extends EventTarget {
 	}
 
 	async signatures(code: string, line: number, col: number): Promise<JediSignature | null> {
-		if (!this.canAssist) return null;
+		if (!(await this.assistReady())) return null;
 		const json = await this.tool<string>(() => this.worker!.sync.signatures(code, line, col));
 		return json ? JSON.parse(json) : null;
 	}
 
 	async describe(code: string, line: number, col: number): Promise<JediDescription | null> {
-		if (!this.canAssist) return null;
+		if (!(await this.assistReady())) return null;
 		const json = await this.tool<string>(() => this.worker!.sync.describe(code, line, col));
 		return json ? JSON.parse(json) : null;
 	}

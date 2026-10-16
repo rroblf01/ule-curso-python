@@ -193,7 +193,7 @@ export async function pythonCompletions(context: CompletionContext): Promise<Com
 
 	const { line, col } = position(context.state, context.pos);
 	const code = context.state.doc.toString();
-	const jedi = await withTimeout(runtime.complete(code, line, col), 1200);
+	const jedi = await withTimeout(runtime.complete(code, line, col), 2500);
 	if (context.aborted) return null;
 
 	if (member) {
@@ -232,7 +232,7 @@ export const pythonHover = hoverTooltip(async (view, pos) => {
 
 	let dom: HTMLElement | null = null;
 	const { line, col } = position(state, word.to);
-	const described = await withTimeout(runtime.describe(state.doc.toString(), line, col), 1200);
+	const described = await withTimeout(runtime.describe(state.doc.toString(), line, col), 2500);
 	if (described) {
 		const known = lookup(described.full_name);
 		if (known) dom = docElement(signatureText(described.name, known), known);
@@ -361,7 +361,7 @@ const signaturePlugin = ViewPlugin.fromClass(
 				dom = signatureDom(known.name, known.doc.params ?? [], call.index, known.doc.doc);
 			} else {
 				const { line, col } = position(state, pos);
-				const jedi = await withTimeout(runtime.signatures(state.doc.toString(), line, col), 1200);
+				const jedi = await withTimeout(runtime.signatures(state.doc.toString(), line, col), 2500);
 				if (jedi) {
 					const spanish = lookup(jedi.full_name);
 					dom = spanish

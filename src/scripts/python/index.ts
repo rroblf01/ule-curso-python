@@ -1,5 +1,11 @@
 import { Playground } from './playground';
+import { preloadPython } from './preload';
 import { runtime, type RuntimeStatus } from './runtime';
+
+/** Boot the interpreter in the background once the page has loaded. */
+export function bootPythonWhenIdle() {
+	preloadPython(() => runtime.start());
+}
 
 const RUNNABLE = 'pre[data-language="python"]:not([data-meta~="static"])';
 const mounted = new WeakMap<HTMLElement, Playground[]>();
@@ -26,7 +32,7 @@ export function isRunnableBlock(pre: Element) {
 }
 
 const LABELS: Record<RuntimeStatus, string> = {
-	idle: 'Sin cargar. Se cargará al usar un editor.',
+	idle: 'Sin cargar todavía.',
 	loading: 'Cargando Python…',
 	ready: 'Listo',
 	busy: 'Ejecutando…',

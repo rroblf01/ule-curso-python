@@ -62,6 +62,14 @@ Los bloques ```` ```python ```` de un tema ejecutable se convierten en editores.
 
 El motor que se ejecuta en el worker está en [public/python/runner.py](public/python/runner.py), incluidas las explicaciones en español de los errores.
 
+## PyScript y Pyodide incluidos en el proyecto
+
+La web no depende de ningún CDN: PyScript, el intérprete Pyodide y los paquetes que usamos (`jedi` para el autocompletado y `pydantic` para el día 3) están en [public/vendor/pyscript/](public/vendor/pyscript/) (unos 18 MB).
+
+- Se generan con `npm run vendor:pyscript`, que descarga el [paquete offline oficial](https://docs.pyscript.net/2026.7.3/user-guide/offline/) de la versión indicada en el campo `pyscript` de `package.json` y los paquetes de Pyodide (comprobando su SHA-256).
+- Para actualizar PyScript o añadir un paquete de Pyodide, cambia `pyscript.version` o `pyscript.packages` en `package.json` y vuelve a ejecutar el comando.
+- Python empieza a cargarse **en diferido** al abrir la web: en las páginas de los días arranca en segundo plano cuando la página ha terminado de cargar; en el resto solo se descargan los ficheros a la caché del navegador. Si el usuario tiene activado el ahorro de datos, se carga al usar un editor.
+
 ## Despliegue
 
 Los editores necesitan `SharedArrayBuffer` (para `input()` y para detener la ejecución), que solo está disponible si la página se sirve con estas cabeceras:
@@ -80,7 +88,7 @@ Las soluciones de los ejercicios van dentro de `<details><summary>Ver solución<
 
 ## Notas para el profesor
 
-- **Primera carga de Python:** cada alumno descarga unos 10-15 MB la primera vez (después queda en la caché del navegador). Con toda la clase en la misma wifi, pide que abran la web y pulsen **Cargar ahora** (panel de la izquierda) al empezar.
+- **Primera carga de Python:** cada alumno descarga unos 15 MB la primera vez (después queda en la caché del navegador). Con toda la clase en la misma wifi, pide que abran la web al empezar la clase: la carga empieza sola.
 - **Ritmo del día 1:** es el día más denso. Los minutos están ajustados a 60; en clase se hacen 2 + 1 ejercicios y el resto queda para casa.
 - **Día 3 sin claves de API:** se usa un modelo abierto (`qwen3:8b`) servido con **Ollama** en la GPU T4 gratuita de Colab. Pide a los alumnos que ejecuten la *celda de preparación* al empezar la clase: tarda 2-3 minutos (descarga de ~5 GB) y se puede explicar la teoría mientras tanto.
 - **Salidas estructuradas con `NativeOutput`:** con modelos locales, el modo por defecto de Pydantic AI (llamada a herramienta) falla más y necesita reintentos. `NativeOutput` hace que Ollama restrinja la generación al esquema JSON. Probado con pydantic-ai 2.57 y Ollama 0.40.
