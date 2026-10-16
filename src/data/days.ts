@@ -3,6 +3,8 @@ export interface Day {
 	title: string;
 	subtitle: string;
 	goal: string;
+	/** Show the "Modelo de IA" panel (server and model behind `curso.MODELO`). */
+	ai?: boolean;
 }
 
 export const days: Day[] = [
@@ -23,5 +25,6 @@ export const days: Day[] = [
 		title: 'IA en tus programas con Pydantic AI',
 		subtitle: 'Construye un asistente de estudio',
 		goal: 'Usar un modelo de IA desde Python para resumir tus apuntes y generar tests de repaso.',
+		ai: true,
 	},
 ];

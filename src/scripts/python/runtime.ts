@@ -4,6 +4,7 @@
  * notebook.
  */
 
+import { type AIConfig, loadAIConfig, saveAIConfig } from './ai-config';
 import { COURSE_MODULE_URL, PYODIDE_URL, PYSCRIPT_URL, RUNNER_URL } from './assets';
 
 const LOAD_TIMEOUT_MS = 90_000;
@@ -108,6 +109,7 @@ class PythonRuntime extends EventTarget {
 	private toolBusy = false;
 	private jediReady = false;
 	private warming: Promise<unknown> | null = null;
+	private aiConfig: AIConfig | null = null;
 	private hardStop: ReturnType<typeof setTimeout> | null = null;
 	private restartResolve: ((result: RunResult) => void) | null = null;
 
@@ -175,6 +177,13 @@ class PythonRuntime extends EventTarget {
 		worker.sync.write = (stream: unknown, text: unknown) => {
 			this.handlers?.write(stream as 'stdout' | 'stderr' | 'result', String(text));
 		};
+		worker.sync.ai_changed = (server: unknown, model: unknown) => {
+			// curso.configurar() was called from the student's code.
+			const config = { server: String(server), model: String(model) };
+			this.aiConfig = config;
+			saveAIConfig(config);
+			this.dispatchEvent(new CustomEvent('ai-config', { detail: config }));
+		};
 		worker.sync.status = (text: unknown) => {
 			this.handlers?.status?.(String(text));
 		};
@@ -190,6 +199,8 @@ class PythonRuntime extends EventTarget {
 
 		this.interrupt = new Uint8Array(new SharedArrayBuffer(1));
 		await worker.sync.set_interrupt_buffer(this.interrupt);
+		this.aiConfig ??= loadAIConfig();
+		await worker.sync.configure_ai(this.aiConfig.server, this.aiConfig.model);
 		this.worker = worker;
 		script.remove();
 		this.setStatus('ready');
@@ -276,6 +287,21 @@ class PythonRuntime extends EventTarget {
 		this.dispatchEvent(new Event('restarted'));
 		this.setStatus('idle');
 		this.start().catch(() => {});
+	}
+
+	/**
+	 * Point `curso.MODELO` to another server or model. It applies at once, even to agents
+	 * already created and while a block waits for a response (not queued for that reason).
+	 */
+	async configureAI(config: AIConfig) {
+		this.aiConfig = config;
+		saveAIConfig(config);
+		this.dispatchEvent(new CustomEvent('ai-config', { detail: config }));
+		await this.worker?.sync.configure_ai(config.server, config.model);
+	}
+
+	get currentAIConfig() {
+		return (this.aiConfig ??= loadAIConfig());
 	}
 
 	/** Forget every variable defined so far. */

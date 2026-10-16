@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import AiModelPanel from '../../components/AiModelPanel.astro';
 import PythonStatus from '../../components/PythonStatus.astro';
 import { days } from '../../data/days';
 import '../../styles/playground.css';
@@ -47,6 +48,7 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 				}
 			</ol>
 			{hasRunnable && <PythonStatus />}
+			{day.ai && <AiModelPanel />}
 		</aside>
 
 		<div class="content">
@@ -97,6 +99,7 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 
 <script>
 	import { isRunnableBlock, mountPlaygrounds, mountStatusPanel } from '../../scripts/python';
+	import { mountAiPanel } from '../../scripts/python/ai-panel';
 	import { runtime } from '../../scripts/python/runtime';
 
 	function initDayPage() {
@@ -143,6 +146,8 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 
 		const statusPanel = root.querySelector<HTMLElement>('[data-python-status]');
 		if (statusPanel) mountStatusPanel(statusPanel, page.signal);
+		const aiPanel = root.querySelector<HTMLElement>('[data-ai-panel]');
+		if (aiPanel) mountAiPanel(aiPanel, page.signal);
 
 		show(current(), false);
 

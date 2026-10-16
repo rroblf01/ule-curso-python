@@ -15,6 +15,35 @@ MODELO.model_name
 
 La primera vez tarda unos segundos, porque el navegador carga **Pydantic AI** y los 25 paquetes que necesita. Después ya queda cargado.
 
+## Elegir el servidor y el modelo
+
+En el panel **Modelo de IA** (a la izquierda, debajo de los temas) puedes cambiar:
+
+- **Servidor Ollama**: la dirección del servidor. Por defecto, el del curso.
+- **Modelo**: los que tenga instalados ese servidor. Por ejemplo, `granite4:350m` es **más pequeño y unas tres veces más rápido** que `qwen3.5:0.8b`, pero se equivoca todavía más (¡y a veces contesta en inglés si no se lo pides en español!).
+
+El cambio se aplica **al momento**, incluso a los agentes que ya hayas creado. Compruébalo: ejecuta este bloque, cambia el modelo en el panel y vuelve a ejecutarlo.
+
+```python
+from pydantic_ai import Agent
+
+agente = Agent(MODELO, instructions="Responde en español, en una frase.")
+resultado = await agente.run("¿Qué es una lista en Python?")
+print(resultado.output)
+print("Ha respondido:", resultado.response.model_name)
+```
+
+También se puede cambiar desde el código:
+
+```python
+import curso
+
+curso.configurar(modelo="granite4:350m")   # o servidor="http://localhost:11434"
+MODELO
+```
+
+> **💡 Más rápido en tu ordenador:** si instalas [Ollama](https://ollama.com/download) en tu ordenador y descargas un modelo (`ollama pull granite4:350m`), pon `http://localhost:11434` como servidor. Si la web no la abres desde tu propio ordenador (`localhost`), arranca Ollama con `OLLAMA_ORIGINS=*` para que el navegador pueda conectarse.
+
 ## ¿Qué hay dentro de `curso`?
 
 `curso` es un pequeño módulo de Python preparado para el curso. Puedes ver su código:
@@ -28,13 +57,14 @@ print(inspect.getsource(curso))
 
 Fíjate en tres cosas:
 
-1. **`SERVIDOR`**: la dirección del servidor Ollama del curso. `/v1` indica que usamos su API compatible con la de OpenAI.
+1. **`SERVIDOR`** y **`NOMBRE_MODELO`**: los elige el panel. A la dirección se le añade `/v1`, que es la API de Ollama compatible con la de OpenAI.
 2. **`reasoning_effort: none`**: Qwen 3.5 "razona" antes de contestar si no se le dice lo contrario. Con razonamiento, una frase tarda **más de un minuto**; sin él, **un par de segundos**. Y **`max_tokens`** limita lo largas que pueden ser las respuestas.
 3. **La cabecera que se quita**: el navegador solo deja enviar a otro dominio las cabeceras que ese servidor acepta (*CORS*), y Ollama no acepta una que añade la librería de OpenAI.
+4. **`ModeloDelCurso`**: envuelve al modelo real. Por eso `configurar()` puede cambiarlo sin que tengas que crear de nuevo tus agentes.
 
 ## Ten en cuenta
 
-- **Es un modelo muy pequeño** (0,8 mil millones de parámetros; ChatGPT o Gemini tienen cientos de veces más). Es rápido y gratuito, pero **se equivoca a menudo**. Desconfía de lo que diga y compruébalo.
+- **Son modelos muy pequeños** (`qwen3.5:0.8b` tiene 0,8 mil millones de parámetros; ChatGPT o Gemini tienen cientos de veces más). Son rápidos y gratuitos, pero **se equivocan a menudo**. Desconfía de lo que digan y compruébalo.
 - **El servidor es compartido**: si toda la clase pregunta a la vez, las respuestas se ponen en cola y tardan más. Ten paciencia; si una petición se eterniza, pulsa **■ Detener**.
 
 <details>

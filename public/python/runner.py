@@ -374,7 +374,19 @@ async def run(code):
     finally:
         _current_task = None
         _flush_all()
+        _report_ai_changes()
     return json.dumps(result)
+
+
+def _report_ai_changes():
+    """If the block called curso.configurar(), tell the page so the panel shows it."""
+    curso = sys.modules.get("curso")
+    if curso is None:
+        return
+    server, model = curso.SERVIDOR, curso.NOMBRE_MODELO
+    if (server, model) != (os.environ.get("CURSO_SERVIDOR"), os.environ.get("CURSO_MODELO")):
+        os.environ["CURSO_SERVIDOR"], os.environ["CURSO_MODELO"] = server, model
+        sync.ai_changed(server, model)
 
 
 def cancel():
@@ -401,6 +413,16 @@ def check(code):
             }
         )
     return "null"
+
+
+def configure_ai(server, model):
+    """Choose the server and model behind `curso.MODELO` (the "Modelo de IA" panel)."""
+    os.environ["CURSO_SERVIDOR"] = str(server)
+    os.environ["CURSO_MODELO"] = str(model)
+    curso = sys.modules.get("curso")
+    if curso is not None:
+        curso.configurar(servidor=str(server), modelo=str(model))
+    return "ok"
 
 
 def set_interrupt_buffer(buffer):
@@ -508,6 +530,7 @@ async def describe(code, line, col):
 
 sync.run = run
 sync.cancel = cancel
+sync.configure_ai = configure_ai
 sync.check = check
 sync.reset = reset
 sync.set_interrupt_buffer = set_interrupt_buffer
