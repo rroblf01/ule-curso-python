@@ -1,0 +1,138 @@
+---
+import { days } from '../data/days';
+
+interface Props {
+	currentDay?: number;
+}
+
+const { currentDay } = Astro.props;
+---
+
+<header class="navbar">
+	<nav class="inner" aria-label="Navegación principal">
+		<a href="/" class="brand">
+			<img src="/favicon.svg" alt="" width="28" height="28" />
+			<span>Python <strong>en 3 días</strong></span>
+		</a>
+		<ul class="days">
+			{
+				days.map((day) => (
+					<li>
+						<a
+							href={`/dia/${day.number}/`}
+							class:list={['day', { active: currentDay === day.number }]}
+							aria-current={currentDay === day.number ? 'page' : undefined}
+						>
+							<span class="label">Día</span> {day.number}
+						</a>
+					</li>
+				))
+			}
+		</ul>
+		<button class="theme" type="button" aria-label="Cambiar tema claro/oscuro" title="Cambiar tema">
+			<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+				<path
+					fill="currentColor"
+					d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"
+				></path>
+			</svg>
+		</button>
+	</nav>
+</header>
+
+<script>
+	const button = document.querySelector<HTMLButtonElement>('.navbar .theme');
+	button?.addEventListener('click', () => {
+		const root = document.documentElement;
+		const isDark =
+			root.dataset.theme === 'dark' ||
+			(!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+		const next = isDark ? 'light' : 'dark';
+		root.dataset.theme = next;
+		try {
+			localStorage.setItem('theme', next);
+		} catch {}
+	});
+</script>
+
+<style>
+	.navbar {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		height: var(--nav-h);
+		background: var(--surface);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.inner {
+		max-width: 1280px;
+		height: 100%;
+		margin: 0 auto;
+		padding: 0 16px;
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+
+	.brand {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		color: var(--text);
+		text-decoration: none;
+		font-size: 1.05rem;
+		white-space: nowrap;
+	}
+
+	.days {
+		display: flex;
+		gap: 6px;
+		margin: 0 0 0 auto;
+		padding: 0;
+		list-style: none;
+	}
+
+	.day {
+		display: block;
+		padding: 7px 16px;
+		border-radius: 999px;
+		color: var(--text);
+		text-decoration: none;
+		font-weight: 600;
+		border: 1px solid var(--border);
+		transition: background 0.15s, border-color 0.15s;
+	}
+
+	.day:hover {
+		border-color: var(--accent);
+	}
+
+	.day.active {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--accent-contrast);
+	}
+
+	.theme {
+		display: grid;
+		place-items: center;
+		width: 38px;
+		height: 38px;
+		border-radius: 999px;
+		border: 1px solid var(--border);
+		background: transparent;
+		color: var(--text);
+		cursor: pointer;
+	}
+
+	@media (max-width: 560px) {
+		.brand span,
+		.label {
+			display: none;
+		}
+		.day {
+			padding: 7px 14px;
+		}
+	}
+</style>
