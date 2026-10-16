@@ -12,16 +12,14 @@ Arriba del todo, en todos los temas de hoy, está el bloque **Modelo de IA**. De
 ```python
 from pydantic_ai import Agent
 
-# MODELO se crea arriba con OllamaModel + OllamaProvider porque Ollama está pensado
-# para ejecutarse en tu propio ordenador, y el nuestro está en un servidor (un VPS):
-# hay que decirle a Pydantic AI en qué dirección está.
+# MODELO es el texto "proveedor:modelo", aquí "ollama:granite4:350m".
+# Ollama está pensado para ejecutarse en tu propio ordenador y el nuestro está en un
+# servidor (un VPS), por eso arriba le decimos dónde está con OLLAMA_BASE_URL.
 #
-# Con los proveedores oficiales basta con el texto "proveedor:modelo": Pydantic AI ya
-# sabe a qué servidor llamar (solo necesita tu clave de API). Por ejemplo:
+# Con los proveedores oficiales no hace falta: Pydantic AI ya sabe a qué servidor
+# llamar (solo necesita tu clave de API). Por ejemplo:
 #     agente = Agent("openai:gpt-5.1-mini")
 #     agente = Agent("google:gemini-2.5-flash")
-# (También vale "ollama:granite4:350m", pero indicando el servidor en la variable de
-# entorno OLLAMA_BASE_URL.)
 agente = Agent(MODELO, instructions="Responde en español, en una frase.")
 resultado = await agente.run("¿Qué es una lista en Python?")
 print(resultado.output)
@@ -30,16 +28,15 @@ print("Ha respondido:", resultado.response.model_name)
 
 La primera vez tarda unos segundos más, porque el navegador carga **Pydantic AI** y los 25 paquetes que necesita.
 
-## Las dos líneas que crean el modelo
-
-El bloque **Modelo de IA** es código normal de Pydantic AI:
+## Las dos líneas del bloque Modelo de IA
 
 ```python static
-MODELO = OllamaModel("granite4:350m", provider=OllamaProvider(base_url="https://ollama.ricardorobles.es/v1"))
+os.environ["OLLAMA_BASE_URL"] = "https://ollama.ricardorobles.es/v1"
+MODELO = "ollama:granite4:350m"
 ```
 
-- **`OllamaProvider(base_url=...)`**: *dónde* está el modelo, la dirección del servidor Ollama. El `/v1` final indica que usamos su API compatible con la de OpenAI.
-- **`OllamaModel("granite4:350m", ...)`**: *qué* modelo de ese servidor queremos usar.
+- **`OLLAMA_BASE_URL`**: *dónde* está el servidor Ollama. El `/v1` final indica que usamos su API compatible con la de OpenAI.
+- **`MODELO`**: *qué* modelo usar, con el formato `"proveedor:modelo"`. Pydantic AI lee el proveedor (`ollama`) y busca la dirección en `OLLAMA_BASE_URL`.
 
 Este mismo código funciona igual en Google Colab o en tu ordenador (después de instalar la librería con `pip install "pydantic-ai-slim[openai]"`).
 
@@ -47,13 +44,13 @@ Este mismo código funciona igual en Google Colab o en tu ordenador (después de
 
 `MODELO` es una variable normal de Python. Para usar otro modelo u otro servidor:
 
-1. Cambia el nombre del modelo o la dirección de `base_url` en el bloque **Modelo de IA** de arriba.
+1. Cambia el nombre del modelo o la dirección de `OLLAMA_BASE_URL` en el bloque **Modelo de IA** de arriba.
 2. Pulsa **Ejecutar** en ese bloque.
 3. **Vuelve a ejecutar los bloques que crean agentes** (`Agent(MODELO, ...)`): cada agente se queda con el modelo que tenía `MODELO` cuando se creó.
 
 Tu cambio se guarda en el navegador; el botón **↺** del bloque vuelve a los valores del curso.
 
-> **💡 Más rápido en tu ordenador:** instala [Ollama](https://ollama.com/download), descarga el modelo con `ollama pull granite4:350m` y usa `base_url="http://localhost:11434/v1"`. Si la web no la abres desde tu propio ordenador (`localhost`), arranca Ollama con `OLLAMA_ORIGINS=*` para que el navegador pueda conectarse.
+> **💡 Más rápido en tu ordenador:** instala [Ollama](https://ollama.com/download), descarga el modelo con `ollama pull granite4:350m` y pon `OLLAMA_BASE_URL` a `"http://localhost:11434/v1"`. Si la web no la abres desde tu propio ordenador (`localhost`), arranca Ollama con `OLLAMA_ORIGINS=*` para que el navegador pueda conectarse.
 
 ## Ten en cuenta
 
@@ -76,10 +73,10 @@ time.sleep(5)
 !ollama pull granite4:350m
 !pip install -q "pydantic-ai-slim[openai]"
 
-from pydantic_ai.models.ollama import OllamaModel
-from pydantic_ai.providers.ollama import OllamaProvider
+import os
 
-MODELO = OllamaModel("granite4:350m", provider=OllamaProvider(base_url="http://localhost:11434/v1"))
+os.environ["OLLAMA_BASE_URL"] = "http://localhost:11434/v1"
+MODELO = "ollama:granite4:350m"
 ```
 
 Recuerda que en Colab, igual que aquí, se usa `await agente.run(...)`.

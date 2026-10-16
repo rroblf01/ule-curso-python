@@ -29,8 +29,7 @@ runnable: false
 Una de las ventajas de Pydantic AI es que el resto del código **no cambia** si usas otro modelo u otro proveedor:
 
 ```python
-MODELO = OllamaModel("granite4:350m", provider=OllamaProvider(base_url="https://ollama.ricardorobles.es/v1"))  # El de hoy
-MODELO = OllamaModel("granite4:350m", provider=OllamaProvider(base_url="http://localhost:11434/v1"))         # Ollama en tu ordenador
+MODELO = "ollama:granite4:350m"         # El de hoy (Ollama, con OLLAMA_BASE_URL)
 MODELO = "google:gemini-2.5-flash"       # Google Gemini (requiere GOOGLE_API_KEY)
 MODELO = "openai:gpt-5.1-mini"           # OpenAI (requiere OPENAI_API_KEY)
 MODELO = "anthropic:claude-sonnet-5-5"   # Anthropic Claude (requiere ANTHROPIC_API_KEY)

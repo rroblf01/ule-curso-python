@@ -9,8 +9,7 @@ export const AI_DEFAULTS = {
 };
 
 /** Code of the block that defines MODELO for every lesson of day 3: plain Pydantic AI. */
-export const MODEL_SETUP_CODE = `from pydantic_ai.models.ollama import OllamaModel
-from pydantic_ai.providers.ollama import OllamaProvider
+export const MODEL_SETUP_CODE = `import os
 
-MODELO = OllamaModel("${AI_DEFAULTS.model}", provider=OllamaProvider(base_url="${AI_DEFAULTS.server}"))
-print("Modelo listo:", MODELO.model_name)`;
+os.environ["OLLAMA_BASE_URL"] = "${AI_DEFAULTS.server}"
+MODELO = "ollama:${AI_DEFAULTS.model}"`;

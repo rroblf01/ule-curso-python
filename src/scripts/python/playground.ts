@@ -134,6 +134,8 @@ export interface PlaygroundOptions {
 	id: string;
 	/** Blocks that come before this one in the same lesson. */
 	previous: () => Playground[];
+	/** Explain that nothing was printed when a run has no output (default: true). */
+	emptyNote?: boolean;
 }
 
 export class Playground {
@@ -473,7 +475,7 @@ export class Playground {
 		const seconds = elapsed < 0.1 ? '' : ` (${elapsed.toLocaleString('es-ES', { maximumFractionDigits: 1 })} s)`;
 		if (result.status === 'ok' || result.status === 'exit') {
 			this.status.textContent = `✓ Ejecutado${seconds}`;
-			if (this.output.childElementCount === 0) {
+			if (this.output.childElementCount === 0 && this.options.emptyNote !== false) {
 				const note = document.createElement('div');
 				note.className = 'pg-note';
 				note.textContent = 'El código se ha ejecutado sin mostrar nada. Usa print() para ver resultados.';

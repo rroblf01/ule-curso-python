@@ -18,6 +18,8 @@ export function mountPlaygrounds(lesson: HTMLElement): Playground[] {
 			new Playground(source, {
 				id: `${location.pathname}#${lesson.dataset.lesson ?? lesson.dataset.setup}:${index}`,
 				previous: () => blocks.slice(0, position),
+				// Setup blocks (such as "Modelo de IA") just define variables.
+				emptyNote: !lesson.dataset.setup,
 			}),
 		);
 	});
