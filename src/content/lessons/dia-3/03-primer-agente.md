@@ -72,6 +72,17 @@ Sin `message_history`, el modelo no sabría a qué se refiere "*se diferencia*".
 
 Crea un agente que actúe como **traductor de español a inglés** y que solo devuelva la traducción, sin explicaciones. Pruébalo con tres frases.
 
+```python
+traductor = Agent(
+    MODELO,
+    instructions="",  # Escribe aquí las instrucciones del traductor
+)
+
+for frase in ["Me encanta programar", "Mañana tengo examen de cálculo", "León está en España"]:
+    # Escribe aquí cómo pedirle al traductor que traduzca la frase y muestra el resultado
+    pass
+```
+
 <details>
 <summary>Ver solución</summary>
 

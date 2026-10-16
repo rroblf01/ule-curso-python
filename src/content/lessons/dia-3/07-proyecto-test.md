@@ -161,3 +161,7 @@ Este bloque pide un resumen y un test seguidos, así que tarda un poco más, sob
 2. **Tarjetas de memoria:** crea un modelo `Tarjeta` con `pregunta` y `respuesta` y un agente que genere tarjetas tipo *flashcard*.
 3. **Verdadero o falso:** añade a `AsistenteDeEstudio` un método para tests de verdadero/falso.
 4. **Comparar modelos:** si tienes Ollama en tu ordenador, descarga otro modelo de la [biblioteca de Ollama](https://ollama.com/library), cámbialo en el bloque **Modelo de IA** y compara la calidad y la velocidad de las preguntas.
+
+```python
+# Escribe aquí tus retos: tienes disponibles Pregunta, Test, agente_test, hacer_test y AsistenteDeEstudio
+```

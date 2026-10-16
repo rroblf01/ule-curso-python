@@ -165,4 +165,10 @@ La forma con mayor área es: Círculo
 - Haz que el programa pida al usuario qué forma quiere y sus medidas con `input()`.
 - Valida los datos: si alguna medida es negativa o cero, lanza un `ValueError`.
 
+Usa las clases que ya has ejecutado más arriba:
+
+```python
+# Escribe aquí tus retos (por ejemplo, la clase Cuadrado)
+```
+
 > **🔗 Para mañana:** fíjate en que nuestras clases tienen atributos con tipos concretos (números, textos…). Mañana usaremos **Pydantic**, una librería que crea clases así y además **valida** automáticamente los datos. Es justo lo que necesitaremos para que una IA nos devuelva información ordenada.

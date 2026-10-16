@@ -88,3 +88,9 @@ for animal in animales:
 
 1. Añade una clase `Pajaro` que sepa `volar()`.
 2. Crea una clase `Refugio` que guarde una lista de animales y tenga los métodos `acoger(animal)`, `adoptar(nombre)` y `contar_por_tipo()` (cuántos perros, gatos…).
+
+```python
+class Pajaro(Animal):
+    # Escribe aquí tu solución
+    pass
+```

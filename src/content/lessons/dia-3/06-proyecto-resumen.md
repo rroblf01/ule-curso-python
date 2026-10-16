@@ -76,4 +76,40 @@ print("\n🔑 Conceptos:", ", ".join(resumen.conceptos))
 
 ## Reto rápido
 
-Añade a `Resumen` un campo `nivel_dificultad: int` entre 1 y 5 (usa `Field(ge=1, le=5)`) y otro `preguntas_para_pensar: list[str]`. Sin tocar nada más, ¡el agente empezará a rellenarlos!
+Añade a `Resumen` un campo `nivel_dificultad: int` entre 1 y 5 (usa `Field(ge=1, le=5)`) y otro `preguntas_para_pensar: list[str]`. Sin cambiar las instrucciones, ¡el agente empezará a rellenarlos!
+
+Como cada agente se queda con la clase que le diste al crearlo, el bloque vuelve a crear el agente con tu nueva `Resumen`:
+
+```python
+class Resumen(BaseModel):
+    titulo: str = Field(description="Título breve del tema")
+    resumen: str = Field(description="Resumen del texto en un párrafo de 3 a 5 frases")
+    ideas_clave: list[str] = Field(description="Entre 3 y 6 ideas principales, una frase cada una")
+    conceptos: list[str] = Field(description="Términos importantes que conviene memorizar")
+    # Añade aquí los dos campos nuevos
+
+
+agente_resumen = Agent(
+    MODELO,
+    output_type=NativeOutput(Resumen),
+    retries=3,
+    instructions=(
+        "Eres un asistente de estudio para estudiantes universitarios. "
+        "Resume los apuntes que te den en español, de forma clara y fiel al texto. "
+        "No inventes información que no aparezca en los apuntes."
+    ),
+)
+
+resultado = await agente_resumen.run(apuntes)
+print(resultado.output)
+```
+
+<details>
+<summary>Ver solución</summary>
+
+```python static
+    nivel_dificultad: int = Field(ge=1, le=5, description="Dificultad del tema, de 1 (fácil) a 5 (difícil)")
+    preguntas_para_pensar: list[str] = Field(description="Preguntas para reflexionar sobre el tema")
+```
+
+</details>
