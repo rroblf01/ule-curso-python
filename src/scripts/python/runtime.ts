@@ -66,6 +66,33 @@ interface XWorker {
 	terminate: () => void;
 }
 
+let pyscriptLoaded: Promise<void> | null = null;
+
+/**
+ * Load PyScript core with a <script type="module"> tag. It cannot be an import()
+ * from our own code: the files live in public/, which Vite refuses to serve as
+ * source modules during development.
+ */
+function loadPyScript() {
+	pyscriptLoaded ??= new Promise<void>((resolve, reject) => {
+		const script = document.createElement('script');
+		script.type = 'module';
+		script.src = PYSCRIPT_URL;
+		script.addEventListener('load', () => resolve(), { once: true });
+		script.addEventListener(
+			'error',
+			() => {
+				pyscriptLoaded = null;
+				script.remove();
+				reject(new Error(`no se ha podido descargar ${PYSCRIPT_URL}`));
+			},
+			{ once: true },
+		);
+		document.head.append(script);
+	});
+	return pyscriptLoaded;
+}
+
 class PythonRuntime extends EventTarget {
 	status: RuntimeStatus = 'idle';
 	message = '';
@@ -116,7 +143,7 @@ class PythonRuntime extends EventTarget {
 
 	private async boot() {
 		this.setStatus('loading', 'Descargando Python…');
-		await import(/* @vite-ignore */ PYSCRIPT_URL);
+		await loadPyScript();
 
 		const script = document.createElement('script');
 		script.type = 'py';
