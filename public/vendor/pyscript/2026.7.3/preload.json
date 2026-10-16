@@ -1,0 +1,11 @@
+[
+	"core.js",
+	"core-7nKZylPm.js",
+	"pyodide/pyodide.mjs",
+	"pyodide/pyodide.asm.mjs",
+	"pyodide/pyodide.asm.wasm",
+	"pyodide/python_stdlib.zip",
+	"pyodide/pyodide-lock.json",
+	"pyodide/jedi-0.19.2-py2.py3-none-any.whl",
+	"pyodide/parso-0.8.6-py2.py3-none-any.whl"
+]
