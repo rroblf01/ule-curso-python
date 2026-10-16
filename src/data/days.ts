@@ -22,6 +22,6 @@ export const days: Day[] = [
 		number: 3,
 		title: 'IA en tus programas con Pydantic AI',
 		subtitle: 'Construye un asistente de estudio',
-		goal: 'Conectar Python con un modelo de lenguaje para resumir tus apuntes y generar tests de repaso.',
+		goal: 'Ejecutar un modelo de IA abierto en la GPU de Colab y usarlo desde Python para resumir tus apuntes y generar tests de repaso.',
 	},
 ];

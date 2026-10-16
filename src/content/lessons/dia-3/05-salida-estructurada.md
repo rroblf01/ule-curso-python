@@ -7,11 +7,13 @@ minutes: 8
 
 Ahora juntamos las dos piezas: un **agente** que en lugar de texto libre devuelve **objetos Pydantic**. Se consigue con el parámetro `output_type`.
 
+Con modelos locales envolvemos la clase en `NativeOutput(...)`: así Ollama **obliga** al modelo a generar exactamente la estructura que pedimos (más abajo vemos cómo).
+
 ## Ejemplo: extraer datos de un texto
 
 ```python
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent
+from pydantic_ai import Agent, NativeOutput
 
 
 class Evento(BaseModel):
@@ -23,7 +25,7 @@ class Evento(BaseModel):
 
 extractor = Agent(
     MODELO,
-    output_type=Evento,
+    output_type=NativeOutput(Evento),
     instructions="Extrae la información del evento descrito por el usuario.",
 )
 
@@ -42,9 +44,11 @@ print(evento.es_examen)  # True
 
 ## ¿Cómo funciona por dentro?
 
-1. Pydantic AI convierte tu clase `Evento` en un **esquema** (una descripción de los campos, sus tipos y sus `description`).
-2. Envía ese esquema al modelo junto con tu mensaje y le pide que responda **siguiendo el esquema**.
-3. Cuando llega la respuesta, Pydantic la **valida**. Si algo no cumple (por ejemplo, falta un campo), Pydantic AI se lo indica al modelo y **le pide que lo corrija** automáticamente.
+1. Pydantic AI convierte tu clase `Evento` en un **esquema JSON** (una descripción de los campos, sus tipos y sus `description`).
+2. Envía ese esquema a Ollama junto con tu mensaje. Con `NativeOutput`, Ollama **restringe la generación**: en cada paso solo deja al modelo escribir caracteres que encajen en el esquema. Es imposible que se salte un campo o que ponga texto donde va un número.
+3. Cuando llega la respuesta, Pydantic la **valida** y la convierte en un objeto `Evento`. Si aun así algo no cumple (por ejemplo, un `Field(ge=0, le=3)`), Pydantic AI le pide al modelo que **lo corrija** automáticamente.
+
+> **💡 ¿Y sin `NativeOutput`?** También funciona (`output_type=Evento`): Pydantic AI le pide al modelo que rellene los datos como si llamara a una función. Los modelos grandes en la nube lo hacen muy bien, pero los modelos pequeños fallan más a menudo, así que con Ollama usaremos siempre `NativeOutput`.
 
 ## Listas de objetos
 
@@ -58,7 +62,7 @@ class Concepto(BaseModel):
 
 glosario = Agent(
     MODELO,
-    output_type=list[Concepto],
+    output_type=NativeOutput(list[Concepto]),
     instructions="Extrae los conceptos técnicos del texto y defínelos.",
 )
 

@@ -2,7 +2,7 @@
 title: Tu primer agente
 day: 3
 order: 3
-minutes: 8
+minutes: 7
 ---
 
 En Pydantic AI, un **agente** (`Agent`) es un objeto que sabe hablar con un modelo de IA. Sí, **un objeto**: `Agent` es una clase, como las que creamos ayer.
@@ -19,12 +19,12 @@ print(resultado.output)
 ```
 
 - `Agent(MODELO)` crea el agente (instanciamos la clase).
-- `agente.run(...)` envía la pregunta al modelo.
+- `agente.run(...)` envía la pregunta al modelo (a través de Ollama).
 - `resultado.output` contiene la respuesta.
 
 ### ¿Y ese `await`?
 
-La respuesta tarda unos segundos en llegar por Internet. `await` significa "**espera a que termine** esta operación". En Colab se puede usar directamente en las celdas.
+El modelo tarda unos segundos en generar la respuesta. `await` significa "**espera a que termine** esta operación". En Colab se puede usar directamente en las celdas.
 
 > **💡 Fuera de Colab** (en un archivo `.py` normal) usarías la versión síncrona, sin `await`: `resultado = agente.run_sync("...")`. En Colab `run_sync` **no funciona**, así que usa siempre `await agente.run(...)`.
 

@@ -39,7 +39,7 @@ fotosíntesis. La membrana plasmática controla qué sustancias entran y salen.
 
 ```python
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent
+from pydantic_ai import Agent, NativeOutput
 
 
 class Resumen(BaseModel):
@@ -54,7 +54,7 @@ class Resumen(BaseModel):
 ```python
 agente_resumen = Agent(
     MODELO,
-    output_type=Resumen,
+    output_type=NativeOutput(Resumen),
     instructions=(
         "Eres un asistente de estudio para estudiantes universitarios. "
         "Resume los apuntes que te den en español, de forma clara y fiel al texto. "
@@ -63,7 +63,7 @@ agente_resumen = Agent(
 )
 ```
 
-Fíjate en la última instrucción: los modelos a veces **inventan** cosas (se llaman *alucinaciones*). Pedirle que se ciña al texto reduce ese riesgo.
+Fíjate en la última instrucción: los modelos a veces **inventan** cosas (se llaman *alucinaciones*), y los modelos pequeños como el nuestro más todavía. Pedirle que se ciña al texto reduce ese riesgo.
 
 ## Paso 4: usarlo y mostrarlo bonito
 

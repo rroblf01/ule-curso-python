@@ -28,7 +28,7 @@ class Test(BaseModel):
 ```python
 agente_test = Agent(
     MODELO,
-    output_type=Test,
+    output_type=NativeOutput(Test),
     instructions=(
         "Eres un profesor universitario que crea preguntas tipo test para repasar. "
         "Crea preguntas en español basadas ÚNICAMENTE en los apuntes que te den. "
@@ -43,7 +43,28 @@ test = resultado.output
 print(f"Se han generado {len(test.preguntas)} preguntas")
 ```
 
-## Paso 3: hacer el test de forma interactiva
+## Paso 3: barajar las opciones
+
+Al probarlo verás que el modelo tiende a poner la respuesta correcta **siempre en la misma posición** (por ejemplo, siempre la C), aunque le pidamos que la varíe. Los modelos de IA no son buenos generando aleatoriedad… pero Python sí:
+
+```python
+import random
+
+
+def barajar(pregunta: Pregunta) -> None:
+    """Desordena las opciones y actualiza la posición de la correcta."""
+    texto_correcto = pregunta.opciones[pregunta.correcta]
+    random.shuffle(pregunta.opciones)
+    pregunta.correcta = pregunta.opciones.index(texto_correcto)
+
+
+for pregunta in test.preguntas:
+    barajar(pregunta)
+```
+
+> **💡 Lección importante:** no todo hay que pedírselo a la IA. Lo que se puede resolver con código normal (barajar, contar, calcular una nota) es **más fiable, más rápido y gratis** si lo hace Python.
+
+## Paso 4: hacer el test de forma interactiva
 
 Aquí no hay IA: es **Python del día 1** (bucles, `input`, condicionales y funciones):
 
@@ -78,7 +99,7 @@ def hacer_test(test: Test) -> float:
 hacer_test(test)
 ```
 
-## Paso 4: todo junto en una clase
+## Paso 5: todo junto en una clase
 
 Usando lo que aprendimos ayer, podemos empaquetar el asistente en una **clase** reutilizable:
 
@@ -97,7 +118,10 @@ class AsistenteDeEstudio:
             f"sobre estos apuntes:\n\n{self.apuntes}"
         )
         resultado = await agente_test.run(peticion)
-        return resultado.output
+        test = resultado.output
+        for pregunta in test.preguntas:
+            barajar(pregunta)
+        return test
 
 
 asistente = AsistenteDeEstudio(apuntes)
@@ -116,4 +140,4 @@ hacer_test(test)
 1. **Repaso de fallos:** haz que `hacer_test` devuelva también la lista de preguntas falladas y vuelve a preguntarlas al final.
 2. **Tarjetas de memoria:** crea un modelo `Tarjeta` con `pregunta` y `respuesta` y un agente que genere tarjetas tipo *flashcard*.
 3. **Verdadero o falso:** añade a `AsistenteDeEstudio` un método para tests de verdadero/falso.
-4. **Apuntes en PDF:** Gemini puede leer PDFs directamente. Investiga `BinaryContent` en la [documentación de Pydantic AI](https://pydantic.dev/docs/ai/advanced-features/input/).
+4. **Comparar modelos:** descarga `qwen3:4b` o `qwen3:14b` con `!ollama pull` y compara la calidad y la velocidad de las preguntas cambiando solo la variable `MODELO`.
