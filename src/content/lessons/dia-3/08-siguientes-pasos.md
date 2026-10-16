@@ -8,29 +8,29 @@ runnable: false
 
 ## Usar la IA con cabeza
 
-- **Puede equivocarse.** Los modelos generan texto que *suena* correcto, pero a veces es falso (alucinaciones). Un modelo de 8B como el nuestro se equivoca más que los grandes de la nube: revisa siempre los resúmenes y las preguntas con tus apuntes.
+- **Puede equivocarse.** Los modelos generan texto que *suena* correcto, pero a veces es falso (alucinaciones). Un modelo de 0,8B como el nuestro se equivoca mucho más que los grandes de la nube: revisa siempre los resúmenes y las preguntas con tus apuntes.
 - **No sustituye a estudiar.** Úsala para repasar y detectar lo que no sabes, no para evitar leer el temario.
-- **Cuidado con los datos personales.** Con Ollama, tus apuntes no salen de la máquina de Colab hacia ningún proveedor de IA. Pero si usas un modelo en la nube, lo que envías sí sale, y en los niveles gratuitos el proveedor puede usarlo para mejorar sus servicios. No envíes información privada tuya ni de otras personas.
+- **Cuidado con los datos personales.** Con el servidor del curso, tus apuntes van a ese servidor y no a ninguna empresa de IA. Si usas un modelo en la nube, lo que envías sí llega al proveedor, y en los niveles gratuitos puede usarlo para mejorar sus servicios. No envíes información privada tuya ni de otras personas.
 - **Respeta las normas de tu asignatura** sobre el uso de IA en trabajos y exámenes.
 
-## Modelo local o en la nube
+## Modelo abierto o en la nube
 
-| | Local (Ollama) | En la nube (Gemini, OpenAI, Claude…) |
+| | Abierto con Ollama (el de hoy) | En la nube (Gemini, OpenAI, Claude…) |
 |---|---|---|
-| Coste | Gratis (si tienes GPU) | Gratis con límites, o de pago |
+| Coste | Gratis (pagas el servidor o la GPU) | Gratis con límites, o de pago |
 | Clave de API | No | Sí |
-| Calidad | Buena para tareas sencillas | La mejor |
-| Velocidad | Depende de tu GPU | Normalmente rápida |
-| Privacidad | Los datos no salen de la máquina | Los datos van al proveedor |
-| Puesta en marcha | Instalar y descargar el modelo | Solo la clave |
+| Calidad | Depende del tamaño: el nuestro es muy básico | La mejor |
+| Velocidad | Depende del servidor y de cuánta gente lo use | Normalmente rápida |
+| Privacidad | Los datos van solo a tu servidor | Los datos van al proveedor |
+| Puesta en marcha | Instalar Ollama y descargar el modelo | Solo la clave |
 
 ## Cambiar de modelo es una línea
 
 Una de las ventajas de Pydantic AI es que el resto del código **no cambia** si usas otro modelo u otro proveedor:
 
 ```python
-MODELO = "ollama:qwen3:8b"               # Local con Ollama (el de hoy)
-MODELO = "ollama:qwen3:14b"              # Local, más grande y mejor (más lento)
+MODELO = crear_modelo("qwen3.5:0.8b")    # El servidor del curso (el de hoy)
+MODELO = "ollama:qwen3:8b"               # Ollama en tu GPU o en Colab, más grande y mejor
 MODELO = "google:gemini-2.5-flash"       # Google Gemini (requiere GOOGLE_API_KEY)
 MODELO = "openai:gpt-5.1-mini"           # OpenAI (requiere OPENAI_API_KEY)
 MODELO = "anthropic:claude-sonnet-5-5"   # Anthropic Claude (requiere ANTHROPIC_API_KEY)
@@ -38,11 +38,11 @@ MODELO = "anthropic:claude-sonnet-5-5"   # Anthropic Claude (requiere ANTHROPIC_
 
 ### Plan B: Gemini con el nivel gratuito
 
-Si un día no hay GPUs libres en Colab, puedes usar Gemini, que tiene un nivel gratuito sin tarjeta:
+Si el servidor del curso no responde, puedes usar Gemini desde Google Colab, que tiene un nivel gratuito sin tarjeta:
 
 1. Crea una clave en [Google AI Studio](https://aistudio.google.com/apikey) (requiere ser mayor de edad).
 2. En Colab, pulsa el icono de la **llave 🔑** (*Secretos*) y añade un secreto llamado `GOOGLE_API_KEY` con tu clave. Activa **Acceso desde el cuaderno**.
-3. Sustituye la celda de preparación por esta:
+3. Ejecuta esta celda en Colab:
 
 ```python
 !pip install -q "pydantic-ai-slim[google]"
@@ -56,7 +56,7 @@ os.environ["PYDANTIC_AI_NO_BANNER"] = "1"
 MODELO = "google:gemini-2.5-flash"
 ```
 
-Todo lo demás (agentes, `NativeOutput`, el asistente de estudio) funciona **sin tocar nada**.
+Todo lo demás (agentes, `NativeOutput`, el asistente de estudio) funciona **sin tocar nada**: copia los bloques de esta web en Colab.
 
 > **⚠️ Tu clave de API es como una contraseña.** No la escribas dentro del código, no la subas a GitHub y no la compartas.
 
@@ -81,6 +81,6 @@ Todo lo demás (agentes, `NativeOutput`, el asistente de estudio) funciona **sin
 |-----|----------------------|
 | 1 | Variables, tipos de datos, condicionales, bucles y funciones |
 | 2 | Clases, atributos, métodos, herencia y polimorfismo |
-| 3 | Ejecutar un modelo de IA abierto e integrarlo en tus programas con datos estructurados |
+| 3 | Integrar un modelo de IA en tus programas y obtener de él datos estructurados |
 
 **¡Enhorabuena! 🐍🎉** Con estas tres piezas ya puedes construir programas útiles de verdad.

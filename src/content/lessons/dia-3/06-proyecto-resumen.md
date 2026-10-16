@@ -3,7 +3,6 @@ title: "Proyecto (1/2): resumir tus apuntes"
 day: 3
 order: 6
 minutes: 8
-runnable: false
 ---
 
 Empezamos el **asistente de estudio**. Primero, el resumen.
@@ -26,21 +25,14 @@ fotosíntesis. La membrana plasmática controla qué sustancias entran y salen.
 """
 ```
 
-> **💡 ¿Tienes los apuntes en un archivo `.txt`?** Súbelo así:
->
-> ```python
-> from google.colab import files
->
-> subidos = files.upload()                      # abre un selector de archivos
-> nombre_archivo = list(subidos.keys())[0]
-> apuntes = subidos[nombre_archivo].decode("utf-8")
-> ```
+> **💡 Consejo:** con un modelo tan pequeño, cuanto más corto y claro sea el texto, mejor será el resumen. Empieza con dos o tres párrafos.
 
 ## Paso 2: definir qué es un "resumen"
 
 ```python
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, NativeOutput
+from curso import MODELO
 
 
 class Resumen(BaseModel):
@@ -56,6 +48,7 @@ class Resumen(BaseModel):
 agente_resumen = Agent(
     MODELO,
     output_type=NativeOutput(Resumen),
+    retries=3,  # si la respuesta no encaja en Resumen, se le pide que la corrija hasta 3 veces
     instructions=(
         "Eres un asistente de estudio para estudiantes universitarios. "
         "Resume los apuntes que te den en español, de forma clara y fiel al texto. "

@@ -453,6 +453,7 @@ export class Playground {
 			const runPromise = runtime.run(this.code, {
 				write: (stream, text) => this.write(stream, text),
 				ask: (prompt) => this.ask(prompt),
+				status: (text) => (this.status.textContent = text),
 			});
 			const onBusy = () => {
 				if (runtime.status === 'busy') this.status.textContent = 'Ejecutando…';

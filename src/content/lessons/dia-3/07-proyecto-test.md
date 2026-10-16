@@ -2,15 +2,21 @@
 title: "Proyecto (2/2): generador de tests"
 day: 3
 order: 7
-minutes: 12
-runnable: false
+minutes: 15
 ---
 
 Ahora la parte más divertida: que la IA nos **haga un test** sobre los apuntes y nos ponga nota.
 
+> Usaremos los `apuntes` del tema anterior: si no lo has hecho, ejecuta antes su primer bloque.
+
 ## Paso 1: definir las preguntas
 
 ```python
+from pydantic import BaseModel, Field
+from pydantic_ai import Agent, NativeOutput
+from curso import MODELO
+
+
 class Pregunta(BaseModel):
     enunciado: str = Field(description="La pregunta, clara y sin ambigüedades")
     opciones: list[str] = Field(
@@ -30,6 +36,7 @@ class Test(BaseModel):
 agente_test = Agent(
     MODELO,
     output_type=NativeOutput(Test),
+    retries=3,
     instructions=(
         "Eres un profesor universitario que crea preguntas tipo test para repasar. "
         "Crea preguntas en español basadas ÚNICAMENTE en los apuntes que te den. "
@@ -38,11 +45,15 @@ agente_test = Agent(
     ),
 )
 
-resultado = await agente_test.run(f"Crea 5 preguntas sobre estos apuntes:\n\n{apuntes}")
+resultado = await agente_test.run(f"Crea 3 preguntas sobre estos apuntes:\n\n{apuntes}")
 test = resultado.output
 
 print(f"Se han generado {len(test.preguntas)} preguntas")
 ```
+
+Generar el test puede tardar unos 20-30 segundos: el modelo tiene que escribir todas las preguntas, opciones y explicaciones.
+
+> **⚠️ Revisa las preguntas:** con un modelo tan pequeño, a veces marca como correcta una opción que no lo es, o se inventa datos. Detectar esos errores con tus apuntes también es repasar.
 
 ## Paso 3: barajar las opciones
 
@@ -113,7 +124,7 @@ class AsistenteDeEstudio:
         resultado = await agente_resumen.run(self.apuntes)
         return resultado.output
 
-    async def crear_test(self, num_preguntas: int = 5, dificultad: str = "media") -> Test:
+    async def crear_test(self, num_preguntas: int = 3, dificultad: str = "media") -> Test:
         peticion = (
             f"Crea {num_preguntas} preguntas de dificultad {dificultad} "
             f"sobre estos apuntes:\n\n{self.apuntes}"
@@ -130,9 +141,11 @@ asistente = AsistenteDeEstudio(apuntes)
 resumen = await asistente.resumir()
 print(resumen.resumen)
 
-test = await asistente.crear_test(num_preguntas=3, dificultad="difícil")
+test = await asistente.crear_test(num_preguntas=2, dificultad="difícil")
 hacer_test(test)
 ```
+
+Este bloque pide un resumen y un test seguidos, así que puede tardar **cerca de un minuto**, más si el servidor está ocupado.
 
 > **💡 `async def`:** como los métodos usan `await` por dentro, hay que declararlos con `async def` y llamarlos también con `await`. Es la única novedad respecto a las clases de ayer.
 

@@ -6,8 +6,6 @@ minutes: 5
 runnable: false
 ---
 
-> **⏱️ Antes de empezar:** abre Colab y ejecuta ya la **celda de preparación** del tema siguiente. Tarda unos minutos en descargar el modelo, así que lo dejamos trabajando mientras vemos la teoría.
-
 ## Modelos de lenguaje (LLM)
 
 Un **LLM** (*Large Language Model*, modelo de lenguaje grande) es un programa entrenado con enormes cantidades de texto para **predecir la siguiente palabra**. Haciendo eso muy bien, es capaz de resumir, traducir, explicar, programar o crear preguntas de examen. ChatGPT, Gemini o Claude son ejemplos.
@@ -24,22 +22,22 @@ Hasta ahora los has usado desde una web de chat. Hoy vas a usarlos **desde tus p
 | Capacidad | Los más potentes | Algo menos potentes, pero muy útiles |
 | Privacidad | Tus datos salen hacia el proveedor | Tus datos no salen de la máquina |
 
-Hoy usaremos un **modelo abierto**, **Qwen 3** (de Alibaba), ejecutándolo en la **GPU gratuita de Google Colab**. Así **no necesitas ninguna clave ni cuenta de pago**.
+Hoy usaremos un **modelo abierto**, **Qwen 3.5** (de Alibaba), que está instalado en un **servidor del curso** con Ollama. Lo usaremos desde esta misma web, igual que los días anteriores: **sin claves, sin cuentas y sin instalar nada**.
 
 ## Las piezas que vamos a usar
 
 ```text
-Tu cuaderno de Colab (Python)
+Tu navegador: Python (PyScript) + Pydantic AI
    │
-   │  Pydantic AI envía la petición por HTTP a localhost:11434
+   │  petición HTTPS por Internet
    ▼
-Ollama (un servidor que corre en la misma máquina de Colab)
+Servidor del curso: Ollama
    │
    ▼
-Modelo Qwen 3 cargado en la GPU T4
+Modelo Qwen 3.5 (0,8B)
 ```
 
-- **[Ollama](https://ollama.com):** un programa que descarga modelos abiertos y los sirve a través de una **API**, igual que lo haría OpenAI o Google, pero en local.
+- **[Ollama](https://ollama.com):** un programa que descarga modelos abiertos y los sirve a través de una **API**, igual que lo harían OpenAI o Google, pero en un servidor propio.
 - **[Pydantic AI](https://pydantic.dev/docs/ai/overview/):** la librería de Python con la que hablaremos con el modelo.
 
 ## ¿Por qué Pydantic AI?

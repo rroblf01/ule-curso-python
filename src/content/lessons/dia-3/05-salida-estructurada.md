@@ -3,18 +3,18 @@ title: Respuestas estructuradas
 day: 3
 order: 5
 minutes: 8
-runnable: false
 ---
 
 Ahora juntamos las dos piezas: un **agente** que en lugar de texto libre devuelve **objetos Pydantic**. Se consigue con el parámetro `output_type`.
 
-Con modelos locales envolvemos la clase en `NativeOutput(...)`: así Ollama **obliga** al modelo a generar exactamente la estructura que pedimos (más abajo vemos cómo).
+Con modelos de Ollama envolvemos la clase en `NativeOutput(...)`: así Ollama **obliga** al modelo a generar exactamente la estructura que pedimos (más abajo vemos cómo).
 
 ## Ejemplo: extraer datos de un texto
 
 ```python
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, NativeOutput
+from curso import MODELO
 
 
 class Evento(BaseModel):

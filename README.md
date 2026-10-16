@@ -10,8 +10,8 @@ Web del curso introductorio de Python para estudiantes de 1.º de la Universidad
 
 Los alumnos no instalan nada:
 
-- **Días 1 y 2:** cada bloque de código es un editor que ejecuta Python en el navegador con [PyScript](https://pyscript.net) (Pyodide en un *web worker*). Incluye autocompletado y documentación en español, firmas de funciones, errores de sintaxis en vivo, errores de ejecución explicados, `input()` y botón para detener bucles infinitos.
-- **Día 3:** [Google Colab](https://colab.research.google.com) con GPU para ejecutar un modelo con Ollama. El tema de Pydantic sí se ejecuta en el navegador.
+- Cada bloque de código es un editor que ejecuta Python en el navegador con [PyScript](https://pyscript.net) (Pyodide en un *web worker*). Incluye autocompletado y documentación en español, firmas de funciones, errores de sintaxis en vivo, errores de ejecución explicados, `input()`, `await` y botón para detener la ejecución.
+- **Día 3:** Pydantic AI también se ejecuta en el navegador y habla con un modelo abierto (`qwen3.5:0.8b`) en un servidor Ollama del curso. Los alumnos lo importan ya configurado con `from curso import MODELO`.
 
 ## Desarrollo
 
@@ -64,9 +64,9 @@ El motor que se ejecuta en el worker está en [public/python/runner.py](public/p
 
 ## PyScript y Pyodide incluidos en el proyecto
 
-La web no depende de ningún CDN: PyScript, el intérprete Pyodide y los paquetes que usamos (`jedi` para el autocompletado y `pydantic` para el día 3) están en [public/vendor/pyscript/](public/vendor/pyscript/) (unos 18 MB).
+La web no depende de ningún CDN: PyScript, el intérprete Pyodide y los paquetes que usamos (`jedi` para el autocompletado, `pydantic` y `pydantic-ai-slim[openai]` con sus 22 dependencias para el día 3) están en [public/vendor/pyscript/](public/vendor/pyscript/) (unos 24 MB). Solo se descargan cuando se usan: pydantic-ai, la primera vez que un bloque lo importa.
 
-- Se generan con `npm run vendor:pyscript`, que descarga el [paquete offline oficial](https://docs.pyscript.net/2026.7.3/user-guide/offline/) de la versión indicada en el campo `pyscript` de `package.json` y los paquetes de Pyodide (comprobando su SHA-256).
+- Se generan con `npm run vendor:pyscript`, que descarga el [paquete offline oficial](https://docs.pyscript.net/2026.7.3/user-guide/offline/) de la versión indicada en el campo `pyscript` de `package.json` y resuelve los paquetes con `micropip` ejecutando ese mismo Pyodide en Node (como lo haría el navegador). Los descarga de la distribución de Pyodide o de PyPI comprobando su SHA-256 y los añade a `pyodide-lock.json`, de modo que un `import` los carga solo.
 - Para actualizar PyScript o añadir un paquete de Pyodide, cambia `pyscript.version` o `pyscript.packages` en `package.json` y vuelve a ejecutar el comando.
 - Python arranca **en diferido nada más entrar en la web** (en cualquier página, también la portada), en un *web worker*. La web usa el router de Astro (`<ClientRouter />`), así que al cambiar de página no se recarga el documento y **el mismo intérprete sigue vivo**: pasar de la portada a un día, o de un día a otro, no vuelve a cargar Python y las variables se conservan.
 - `jedi` (autocompletado) no se carga en segundo plano para no ocupar el worker justo cuando el alumno pulsa **Ejecutar**: se carga al hacer clic en un editor.
@@ -92,7 +92,15 @@ Las soluciones de los ejercicios van dentro de `<details><summary>Ver solución<
 
 - **Primera carga de Python:** cada alumno descarga unos 15 MB la primera vez (después queda en la caché del navegador). Con toda la clase en la misma wifi, pide que abran la web al empezar la clase: la carga empieza sola.
 - **Ritmo del día 1:** es el día más denso. Los minutos están ajustados a 60; en clase se hacen 2 + 1 ejercicios y el resto queda para casa.
-- **Día 3 sin claves de API:** se usa un modelo abierto (`qwen3:8b`) servido con **Ollama** en la GPU T4 gratuita de Colab. Pide a los alumnos que ejecuten la *celda de preparación* al empezar la clase: tarda 2-3 minutos (descarga de ~5 GB) y se puede explicar la teoría mientras tanto.
-- **Salidas estructuradas con `NativeOutput`:** con modelos locales, el modo por defecto de Pydantic AI (llamada a herramienta) falla más y necesita reintentos. `NativeOutput` hace que Ollama restrinja la generación al esquema JSON. Probado con pydantic-ai 2.57 y Ollama 0.40.
-- **Plan B:** las GPUs gratuitas de Colab no están garantizadas. El último tema del día 3 explica cómo cambiar a Gemini (nivel gratuito con clave de [Google AI Studio](https://aistudio.google.com/apikey), requiere ser mayor de edad) cambiando solo la celda de preparación.
-- **Pydantic AI v2:** en Colab hay que usar `await agente.run(...)` en lugar de `run_sync`, porque el cuaderno ya tiene un bucle de eventos en marcha.
+- **Día 3: el servidor de IA.** [public/python/curso.py](public/python/curso.py) define `MODELO` (servidor `https://ollama.ricardorobles.es/v1`, modelo `qwen3.5:0.8b`); para cambiar de servidor o de modelo, edita `SERVIDOR` y `NOMBRE_MODELO`. Lo que necesita el servidor:
+  - `OLLAMA_ORIGINS=*` (o el dominio de la web): sin él, Ollama rechaza con 403 las peticiones del navegador.
+  - Un volumen en `/root/.ollama`, para no perder el modelo al redesplegar.
+  - Capacidad para toda la clase: en CPU el modelo genera unos 17 tokens/s y las peticiones se ponen en cola. Valora subir `OLLAMA_NUM_PARALLEL` si el servidor tiene núcleos y memoria de sobra.
+- **Detalles de `curso.py`, todos comprobados con pydantic-ai 2.57 y Ollama 0.40.5:**
+  - `reasoning_effort: "none"` va en `extra_body`: Qwen 3.5 razona por defecto (una frase: 90 s con razonamiento, 2 s sin él) y el ajuste genérico `thinking=False` de pydantic-ai no llega a enviarse para este modelo.
+  - `max_tokens` también va en `extra_body`: pydantic-ai envía `max_completion_tokens`, que esta versión de Ollama ignora.
+  - Se elimina la cabecera `x-stainless-read-timeout` que añade el SDK de OpenAI, porque no está en la lista de cabeceras que el CORS de Ollama permite.
+- **Calidad del modelo:** con 0,8B de parámetros contesta rápido pero se equivoca a menudo (por ejemplo, marca como correcta una opción errónea en los tests). Los temas lo advierten y lo usan como ejercicio de espíritu crítico; con un servidor más potente, basta con cambiar `NOMBRE_MODELO`.
+- **Salidas estructuradas con `NativeOutput`:** con modelos de Ollama, el modo por defecto de Pydantic AI (llamada a herramienta) falla más y necesita reintentos. `NativeOutput` hace que Ollama restrinja la generación al esquema JSON.
+- **`await` y no `run_sync`:** en el navegador (igual que en Colab) hay que usar `await agente.run(...)`. Si un alumno escribe `run_sync`, el editor lo detecta antes de ejecutar y le explica qué hacer, porque en el navegador se quedaría colgado.
+- **Plan B:** si el servidor no responde, el tema 2 del día 3 explica cómo ejecutar Ollama en la GPU gratuita de Colab, y el último tema cómo usar Gemini (nivel gratuito con clave de [Google AI Studio](https://aistudio.google.com/apikey)).

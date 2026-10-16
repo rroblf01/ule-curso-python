@@ -3,7 +3,6 @@ title: Tu primer agente
 day: 3
 order: 3
 minutes: 7
-runnable: false
 ---
 
 En Pydantic AI, un **agente** (`Agent`) es un objeto que sabe hablar con un modelo de IA. Sí, **un objeto**: `Agent` es una clase, como las que creamos ayer.
@@ -12,6 +11,7 @@ En Pydantic AI, un **agente** (`Agent`) es un objeto que sabe hablar con un mode
 
 ```python
 from pydantic_ai import Agent
+from curso import MODELO
 
 agente = Agent(MODELO)
 
@@ -20,14 +20,16 @@ print(resultado.output)
 ```
 
 - `Agent(MODELO)` crea el agente (instanciamos la clase).
-- `agente.run(...)` envía la pregunta al modelo (a través de Ollama).
+- `agente.run(...)` envía la pregunta al modelo (al servidor del curso).
 - `resultado.output` contiene la respuesta.
 
 ### ¿Y ese `await`?
 
-El modelo tarda unos segundos en generar la respuesta. `await` significa "**espera a que termine** esta operación". En Colab se puede usar directamente en las celdas.
+El modelo tarda unos segundos en generar la respuesta. `await` significa "**espera a que termine** esta operación". En esta web (y en Colab) se puede usar directamente en los bloques.
 
-> **💡 Fuera de Colab** (en un archivo `.py` normal) usarías la versión síncrona, sin `await`: `resultado = agente.run_sync("...")`. En Colab `run_sync` **no funciona**, así que usa siempre `await agente.run(...)`.
+> **💡 En un archivo `.py` normal** usarías la versión síncrona, sin `await`: `resultado = agente.run_sync("...")`. Aquí `run_sync` **no funciona**, así que usa siempre `await agente.run(...)`.
+
+> **⚠️ Comprueba lo que dice.** Nuestro modelo es muy pequeño y a veces se inventa cosas. ¿Es correcta su explicación de lo que es una variable?
 
 ## Darle instrucciones
 
@@ -38,7 +40,7 @@ profesor = Agent(
     MODELO,
     instructions=(
         "Eres un profesor de Python para estudiantes de primer curso de universidad. "
-        "Respondes en español, de forma breve y con un ejemplo de código cuando sea útil."
+        "Respondes en español, en dos o tres frases como máximo."
     ),
 )
 

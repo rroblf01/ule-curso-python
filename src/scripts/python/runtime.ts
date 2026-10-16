@@ -4,7 +4,7 @@
  * notebook.
  */
 
-import { PYODIDE_URL, PYSCRIPT_URL, RUNNER_URL } from './assets';
+import { COURSE_MODULE_URL, PYODIDE_URL, PYSCRIPT_URL, RUNNER_URL } from './assets';
 
 const LOAD_TIMEOUT_MS = 90_000;
 const HARD_STOP_AFTER_MS = 3_000;
@@ -14,6 +14,8 @@ export type RuntimeStatus = 'idle' | 'loading' | 'ready' | 'busy' | 'error' | 'u
 export interface RunHandlers {
 	write: (stream: 'stdout' | 'stderr' | 'result', text: string) => void;
 	ask: (prompt: string) => Promise<string | null>;
+	/** Progress messages, such as packages being loaded. */
+	status?: (text: string) => void;
 }
 
 export interface PythonError {
@@ -148,7 +150,10 @@ class PythonRuntime extends EventTarget {
 		const script = document.createElement('script');
 		script.type = 'py';
 		script.setAttribute('worker', '');
-		script.setAttribute('config', JSON.stringify({ interpreter: PYODIDE_URL }));
+		script.setAttribute(
+			'config',
+			JSON.stringify({ interpreter: PYODIDE_URL, files: { [COURSE_MODULE_URL]: './curso.py' } }),
+		);
 		script.src = RUNNER_URL;
 		script.hidden = true;
 
@@ -169,6 +174,9 @@ class PythonRuntime extends EventTarget {
 		const worker = (script as unknown as { xworker: XWorker }).xworker;
 		worker.sync.write = (stream: unknown, text: unknown) => {
 			this.handlers?.write(stream as 'stdout' | 'stderr' | 'result', String(text));
+		};
+		worker.sync.status = (text: unknown) => {
+			this.handlers?.status?.(String(text));
 		};
 		worker.sync.ask = (prompt: unknown) =>
 			new Promise<string | null>((resolve) => {
@@ -248,6 +256,9 @@ class PythonRuntime extends EventTarget {
 			this.pendingAsk(null);
 		} else {
 			this.interrupt[0] = 2; // SIGINT -> KeyboardInterrupt
+			// Code waiting on `await` (e.g. a model response) runs no bytecode, so the interrupt
+			// cannot reach it: cancel its task too. Not queued, the worker is free while it waits.
+			this.worker?.sync.cancel().catch(() => {});
 		}
 		if (this.hardStop) return;
 		this.hardStop = setTimeout(() => this.restart(), HARD_STOP_AFTER_MS);

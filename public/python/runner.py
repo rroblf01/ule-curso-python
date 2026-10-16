@@ -6,7 +6,9 @@ the main thread through `sync.write` (output) and `sync.ask` (input()).
 """
 
 import ast
+import asyncio
 import builtins
+import inspect
 import json
 import linecache
 import os
@@ -14,12 +16,37 @@ import re
 import sys
 import time
 import traceback
+import warnings
 
+import js
 import pyodide_js
-from pyodide.ffi import jsnull
+from pyodide.code import find_imports
+from pyodide.ffi import jsnull, to_js
 from pyscript import sync
 
 os.environ["TERM"] = "dumb"
+os.environ["PYDANTIC_AI_NO_BANNER"] = "1"
+
+# Modules that need extra packages although they are not in the Pyodide lock file.
+EXTRA_PACKAGES = {"curso": ["pydantic-ai-slim"]}
+TOP_LEVEL_AWAIT = ast.PyCF_ALLOW_TOP_LEVEL_AWAIT
+# Blocking calls that never finish in the browser, where nothing can block the event loop.
+BLOCKING_CALLS = {"run_sync", "run_stream_sync", "to_cli_sync"}
+_current_task = None
+
+
+class SoloAsincronoError(RuntimeError):
+    """Raised before running code that calls a synchronous agent method."""
+
+
+def _asyncio_errors_to_console(loop, context):
+    # Cleaning up a cancelled agent run reports harmless errors: keep them out of the student's output.
+    js.console.warn(f"asyncio: {context.get('message')} {context.get('exception')!r}")
+
+
+asyncio.get_event_loop().set_exception_handler(_asyncio_errors_to_console)
+# Also printed while cleaning up a cancelled agent run.
+warnings.filterwarnings("ignore", message="coroutine method 'athrow'", category=RuntimeWarning)
 
 NS = {}
 _block_counter = 0
@@ -142,6 +169,18 @@ def _hint(exc, summary):
     suggestion = _suggestion(summary)
     extra = f" ¿Quizás querías decir `{suggestion}`?" if suggestion else ""
 
+    if name in ("ModelAPIError", "ModelHTTPError") or isinstance(exc, (ConnectionError, TimeoutError)):
+        return (
+            "No se ha podido hablar con el modelo de IA. Comprueba tu conexión a Internet; si sigue fallando, "
+            "puede que el servidor del curso esté ocupado o apagado: avisa al profesor."
+        )
+    if name == "UnexpectedModelBehavior":
+        return (
+            "El modelo ha respondido algo que no encaja con lo que le hemos pedido. Es un modelo pequeño y a veces "
+            "se equivoca: vuelve a ejecutar el bloque o simplifica la petición."
+        )
+    if isinstance(exc, SoloAsincronoError) or "run_sync" in msg or "event loop is already running" in msg:
+        return "En el navegador (igual que en Colab) usa `await agente.run(...)` en lugar de `agente.run_sync(...)`."
     if name == "ValidationError":
         return "Pydantic ha rechazado los datos porque no cumplen los tipos o restricciones del modelo. Abre el mensaje original para ver qué campo falla."
     if isinstance(exc, IndentationError):
@@ -204,6 +243,8 @@ def _hint(exc, summary):
         if "too many values to unpack" in msg or "not enough values to unpack" in msg:
             return "El número de variables a la izquierda del `=` no coincide con el número de valores."
         return "El tipo del valor es correcto, pero su contenido no es válido para esta operación."
+    if isinstance(exc, AttributeError) and "'coroutine' object" in msg:
+        return "Te falta `await`. Las funciones asíncronas, como `agente.run(...)`, se llaman así: `resultado = await agente.run(...)`."
     if isinstance(exc, AttributeError):
         match = re.search(r"'(\w+)' object has no attribute '(\w+)'", msg)
         if match:
@@ -235,6 +276,8 @@ def _error_payload(exc, filename):
     if isinstance(exc, SyntaxError):
         if exc.filename == filename:
             line, col = exc.lineno, exc.offset
+    elif isinstance(exc, SoloAsincronoError):
+        line = exc.lineno
     else:
         for frame in reversed(te.stack):
             if frame.filename == filename:
@@ -260,31 +303,68 @@ def _short_repr(value):
     return text if len(text) <= 5000 else text[:5000] + " …"
 
 
+def _package_message(message):
+    message = str(message)
+    if message.startswith("Loading "):
+        names = message.removeprefix("Loading ").split(", ")
+        shown = ", ".join(names[:3]) + (f" y {len(names) - 3} más" if len(names) > 3 else "")
+        sync.status(f"Cargando paquetes: {shown}…")
+
+
+async def _load_packages(code):
+    """Load the Pyodide packages a block needs before running it."""
+    options = to_js({"messageCallback": _package_message}, dict_converter=js.Object.fromEntries)
+    await pyodide_js.loadPackagesFromImports(code, options)
+    try:
+        imports = find_imports(code)
+    except SyntaxError:
+        return
+    extra = [package for name in imports for package in EXTRA_PACKAGES.get(name, [])]
+    if extra:
+        await pyodide_js.loadPackage(to_js(extra), options)
+
+
+async def _execute(code, mode, filename):
+    """Compile and run one statement or expression, awaiting it if it uses `await`."""
+    compiled = compile(code, filename, mode, flags=TOP_LEVEL_AWAIT)
+    value = eval(compiled, NS)
+    if compiled.co_flags & inspect.CO_COROUTINE:
+        value = await value
+    return value
+
+
 async def run(code):
     """Run a block of code like a notebook cell and report how it ended."""
-    global _block_counter
+    global _block_counter, _current_task
     _block_counter += 1
     filename = f"<bloque {_block_counter}>"
     linecache.cache[filename] = (len(code), None, code.splitlines(True), filename)
+    _current_task = asyncio.current_task()
 
     try:
-        await pyodide_js.loadPackagesFromImports(code)
-    except Exception:
-        pass
+        await _load_packages(code)
+    except Exception as exc:  # a missing package then shows up as ModuleNotFoundError
+        js.console.warn(f"No se han podido cargar los paquetes: {exc!r}")
+    sync.status("Ejecutando…")
 
     result = {"status": "ok", "error": None}
     try:
         tree = ast.parse(code, filename)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Attribute) and node.attr in BLOCKING_CALLS:
+                exc = SoloAsincronoError(f"{node.attr}() no funciona en el navegador: usa await agente.run(...)")
+                exc.lineno = node.lineno
+                raise exc
         for node in tree.body:
             is_comment = isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
             if isinstance(node, ast.Expr) and not is_comment:
-                value = eval(compile(ast.Expression(node.value), filename, "eval"), NS)
+                value = await _execute(ast.Expression(node.value), "eval", filename)
                 if value is not None:
                     _flush_all()
                     sync.write("result", _short_repr(value))
             else:
-                exec(compile(ast.Module([node], []), filename, "exec"), NS)
-    except KeyboardInterrupt:
+                await _execute(ast.Module([node], []), "exec", filename)
+    except (KeyboardInterrupt, asyncio.CancelledError):
         result["status"] = "interrupted"
     except SystemExit:
         result["status"] = "exit"
@@ -292,8 +372,16 @@ async def run(code):
         result["status"] = "error"
         result["error"] = _error_payload(exc, filename)
     finally:
+        _current_task = None
         _flush_all()
     return json.dumps(result)
+
+
+def cancel():
+    """Stop a block that is waiting (e.g. for a model response), where Ctrl+C cannot reach it."""
+    if _current_task is not None and not _current_task.done():
+        _current_task.cancel()
+    return "ok"
 
 
 def check(code):
@@ -419,6 +507,7 @@ async def describe(code, line, col):
 
 
 sync.run = run
+sync.cancel = cancel
 sync.check = check
 sync.reset = reset
 sync.set_interrupt_buffer = set_interrupt_buffer
