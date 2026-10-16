@@ -8,6 +8,8 @@ the main thread through `sync.write` (output) and `sync.ask` (input()).
 import ast
 import asyncio
 import builtins
+import importlib.abc
+import importlib.util
 import inspect
 import json
 import linecache
@@ -20,15 +22,13 @@ import warnings
 
 import js
 import pyodide_js
-from pyodide.code import find_imports
+from pyodide.code import run_js
 from pyodide.ffi import jsnull, to_js
 from pyscript import sync
 
 os.environ["TERM"] = "dumb"
 os.environ["PYDANTIC_AI_NO_BANNER"] = "1"
 
-# Modules that need extra packages although they are not in the Pyodide lock file.
-EXTRA_PACKAGES = {"curso": ["pydantic-ai-slim"]}
 TOP_LEVEL_AWAIT = ast.PyCF_ALLOW_TOP_LEVEL_AWAIT
 # Blocking calls that never finish in the browser, where nothing can block the event loop.
 BLOCKING_CALLS = {"run_sync", "run_stream_sync", "to_cli_sync"}
@@ -47,6 +47,8 @@ def _asyncio_errors_to_console(loop, context):
 asyncio.get_event_loop().set_exception_handler(_asyncio_errors_to_console)
 # Also printed while cleaning up a cancelled agent run.
 warnings.filterwarnings("ignore", message="coroutine method 'athrow'", category=RuntimeWarning)
+# httpx2 warns that connection limits do not apply in the browser: true, and irrelevant for students.
+warnings.filterwarnings("ignore", message="The following transport option", category=UserWarning)
 
 NS = {}
 _block_counter = 0
@@ -120,6 +122,62 @@ def _input(prompt=""):
 
 
 builtins.input = _input
+
+# The OpenAI client (used by Pydantic AI for Ollama) sends this header, but Ollama's CORS
+# configuration does not allow it, so the browser would block every request to the model.
+# Drop it from every fetch() of this worker, so plain Pydantic AI code works unchanged.
+run_js(
+    """
+    (() => {
+        const blocked = ['x-stainless-read-timeout'];
+        const originalFetch = globalThis.fetch.bind(globalThis);
+        globalThis.fetch = (input, init) => {
+            if (init && init.headers) {
+                const headers = new Headers(init.headers);
+                for (const name of blocked) headers.delete(name);
+                init = { ...init, headers };
+            }
+            return originalFetch(input, init);
+        };
+    })();
+    """
+)
+
+
+def _patch_jsfetch(module):
+    # In the browser, fetch() only resolves once the server starts to answer, and Ollama answers
+    # when the whole response is generated. httpx2-jsfetch applies the *connect* timeout (5 s in
+    # Pydantic AI) to that wait, which cuts any slow answer: wait as long as the read timeout.
+    compute = module._compute_timeouts
+
+    def _compute_timeouts(extensions):
+        connect, read = compute(extensions)
+        return (max(connect, read) if connect and read else 0.0, read)
+
+    module._compute_timeouts = _compute_timeouts
+
+
+class _PatchJsfetchOnImport(importlib.abc.MetaPathFinder):
+    """Apply _patch_jsfetch as soon as httpx2_jsfetch is imported (it is loaded on demand)."""
+
+    def find_spec(self, name, path=None, target=None):
+        if name != "httpx2_jsfetch":
+            return None
+        sys.meta_path.remove(self)
+        spec = importlib.util.find_spec(name)
+        if spec is None or spec.loader is None:
+            return spec
+        exec_module = spec.loader.exec_module
+
+        def exec_and_patch(module):
+            exec_module(module)
+            _patch_jsfetch(module)
+
+        spec.loader.exec_module = exec_and_patch
+        return spec
+
+
+sys.meta_path.insert(0, _PatchJsfetchOnImport())
 
 try:
     import pydoc
@@ -319,13 +377,6 @@ async def _load_packages(code):
     """Load the Pyodide packages a block needs before running it."""
     options = to_js({"messageCallback": _package_message}, dict_converter=js.Object.fromEntries)
     await pyodide_js.loadPackagesFromImports(code, options)
-    try:
-        imports = find_imports(code)
-    except SyntaxError:
-        return
-    extra = [package for name in imports for package in EXTRA_PACKAGES.get(name, [])]
-    if extra:
-        await pyodide_js.loadPackage(to_js(extra), options)
 
 
 async def _execute(code, mode, filename):

@@ -4,10 +4,12 @@
  * notebook.
  */
 
-import { COURSE_MODULE_URL, PYODIDE_URL, PYSCRIPT_URL, RUNNER_URL } from './assets';
+import { PYODIDE_URL, PYSCRIPT_URL, RUNNER_URL } from './assets';
 
 const LOAD_TIMEOUT_MS = 90_000;
 const HARD_STOP_AFTER_MS = 3_000;
+/** How long the worker has to accept a cancellation before we fall back to Ctrl+C. */
+const CANCEL_ANSWER_MS = 300;
 
 export type RuntimeStatus = 'idle' | 'loading' | 'ready' | 'busy' | 'error' | 'unsupported';
 
@@ -150,10 +152,7 @@ class PythonRuntime extends EventTarget {
 		const script = document.createElement('script');
 		script.type = 'py';
 		script.setAttribute('worker', '');
-		script.setAttribute(
-			'config',
-			JSON.stringify({ interpreter: PYODIDE_URL, files: { [COURSE_MODULE_URL]: './curso.py' } }),
-		);
+		script.setAttribute('config', JSON.stringify({ interpreter: PYODIDE_URL }));
 		script.src = RUNNER_URL;
 		script.hidden = true;
 
@@ -255,10 +254,19 @@ class PythonRuntime extends EventTarget {
 			this.dispatchEvent(new Event('stopping'));
 			this.pendingAsk(null);
 		} else {
-			this.interrupt[0] = 2; // SIGINT -> KeyboardInterrupt
-			// Code waiting on `await` (e.g. a model response) runs no bytecode, so the interrupt
-			// cannot reach it: cancel its task too. Not queued, the worker is free while it waits.
-			this.worker?.sync.cancel().catch(() => {});
+			// Code waiting on `await` (e.g. a model response) runs no bytecode, so Ctrl+C cannot reach
+			// it: cancel its task instead. The worker answers at once only if it is waiting (it is free
+			// then; this call is not queued). If it is busy computing, it cannot answer: send Ctrl+C.
+			// Never both: a Ctrl+C in the middle of the cancellation would break the library's cleanup.
+			const interrupt = this.interrupt;
+			let answered = false;
+			this.worker?.sync
+				.cancel()
+				.then(() => (answered = true))
+				.catch(() => {});
+			setTimeout(() => {
+				if (!answered && this.running) interrupt[0] = 2; // SIGINT -> KeyboardInterrupt
+			}, CANCEL_ANSWER_MS);
 		}
 		if (this.hardStop) return;
 		this.hardStop = setTimeout(() => this.restart(), HARD_STOP_AFTER_MS);

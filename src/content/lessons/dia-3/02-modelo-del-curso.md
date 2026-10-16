@@ -20,34 +20,30 @@ print("Ha respondido:", resultado.response.model_name)
 
 La primera vez tarda unos segundos más, porque el navegador carga **Pydantic AI** y los 25 paquetes que necesita.
 
+## Las dos líneas que crean el modelo
+
+El bloque **Modelo de IA** es código normal de Pydantic AI:
+
+```python static
+MODELO = OllamaModel("granite4:350m", provider=OllamaProvider(base_url="https://ollama.ricardorobles.es/v1"))
+```
+
+- **`OllamaProvider(base_url=...)`**: *dónde* está el modelo, la dirección del servidor Ollama. El `/v1` final indica que usamos su API compatible con la de OpenAI.
+- **`OllamaModel("granite4:350m", ...)`**: *qué* modelo de ese servidor queremos usar.
+
+Este mismo código funciona igual en Google Colab o en tu ordenador (después de instalar la librería con `pip install "pydantic-ai-slim[openai]"`).
+
 ## Cambiar de modelo o de servidor
 
 `MODELO` es una variable normal de Python. Para usar otro modelo u otro servidor:
 
-1. Cambia el nombre del modelo o la dirección de `SERVIDOR` en el bloque **Modelo de IA** de arriba.
+1. Cambia el nombre del modelo o la dirección de `base_url` en el bloque **Modelo de IA** de arriba.
 2. Pulsa **Ejecutar** en ese bloque.
 3. **Vuelve a ejecutar los bloques que crean agentes** (`Agent(MODELO, ...)`): cada agente se queda con el modelo que tenía `MODELO` cuando se creó.
 
 Tu cambio se guarda en el navegador; el botón **↺** del bloque vuelve a los valores del curso.
 
-> **💡 Más rápido en tu ordenador:** instala [Ollama](https://ollama.com/download), descarga el modelo con `ollama pull granite4:350m` y pon `SERVIDOR = "http://localhost:11434"`. Si la web no la abres desde tu propio ordenador (`localhost`), arranca Ollama con `OLLAMA_ORIGINS=*` para que el navegador pueda conectarse.
-
-## ¿Qué hace `crear_modelo`?
-
-`crear_modelo` viene del módulo `curso`, preparado para esta web. Puedes ver su código:
-
-```python
-import inspect
-import curso
-
-print(inspect.getsource(curso))
-```
-
-Fíjate en tres cosas:
-
-1. **El servidor**: a la dirección se le añade `/v1`, que es la API de Ollama compatible con la de OpenAI.
-2. **`extra_body`**: `reasoning_effort: none` evita que los modelos que saben "razonar" lo hagan (tardarían minutos), y `max_tokens` limita lo largas que pueden ser las respuestas.
-3. **La cabecera que se quita**: el navegador solo deja enviar a otro dominio las cabeceras que ese servidor acepta (*CORS*), y Ollama no acepta una que añade la librería de OpenAI.
+> **💡 Más rápido en tu ordenador:** instala [Ollama](https://ollama.com/download), descarga el modelo con `ollama pull granite4:350m` y usa `base_url="http://localhost:11434/v1"`. Si la web no la abres desde tu propio ordenador (`localhost`), arranca Ollama con `OLLAMA_ORIGINS=*` para que el navegador pueda conectarse.
 
 ## Ten en cuenta
 
@@ -56,35 +52,24 @@ Fíjate en tres cosas:
 - **El servidor es compartido**: si toda la clase pregunta a la vez, las respuestas se ponen en cola y tardan más. Si una petición se eterniza, pulsa **■ Detener**.
 
 <details>
-<summary>¿Y fuera de esta web? (Colab o tu ordenador)</summary>
+<summary>¿Y si quiero mi propio servidor en Colab?</summary>
 
-En **cualquier Python** (Colab, tu ordenador…) puedes usar el mismo servidor sin el módulo `curso`:
-
-```python static
-# !pip install "pydantic-ai-slim[openai]"   ← en Colab, la primera vez
-import os
-from pydantic_ai import Agent
-
-os.environ["OLLAMA_BASE_URL"] = "https://ollama.ricardorobles.es/v1"
-MODELO = "ollama:granite4:350m"
-
-agente = Agent(MODELO, model_settings={"extra_body": {"max_tokens": 700}})
-```
-
-Si quieres **tu propio servidor**, puedes ejecutar Ollama en la GPU gratuita de Google Colab (*Entorno de ejecución → Cambiar tipo de entorno → GPU T4*):
+Puedes ejecutar Ollama en la GPU gratuita de Google Colab (*Entorno de ejecución → Cambiar tipo de entorno → GPU T4*) y usarlo desde ese mismo cuaderno:
 
 ```python static
 !apt-get -qq update > /dev/null && apt-get -qq install -y zstd > /dev/null
 !curl -fsSL https://ollama.com/install.sh | sh
 
-import os, subprocess, time
+import subprocess, time
 servidor = subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(5)
 !ollama pull granite4:350m
 !pip install -q "pydantic-ai-slim[openai]"
 
-os.environ["OLLAMA_BASE_URL"] = "http://localhost:11434/v1"
-MODELO = "ollama:granite4:350m"
+from pydantic_ai.models.ollama import OllamaModel
+from pydantic_ai.providers.ollama import OllamaProvider
+
+MODELO = OllamaModel("granite4:350m", provider=OllamaProvider(base_url="http://localhost:11434/v1"))
 ```
 
 Recuerda que en Colab, igual que aquí, se usa `await agente.run(...)`.
