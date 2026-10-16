@@ -14,7 +14,6 @@ Con modelos de Ollama envolvemos la clase en `NativeOutput(...)`: así Ollama **
 ```python
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, NativeOutput
-from curso import MODELO
 
 
 class Evento(BaseModel):

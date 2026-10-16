@@ -5,24 +5,9 @@ order: 2
 minutes: 5
 ---
 
-En esta web el modelo de IA **ya está configurado**: solo tienes que importarlo. Ejecuta este bloque:
+Arriba del todo, en todos los temas de hoy, está el bloque **Modelo de IA**. Define la variable `MODELO` que usan todos los ejemplos y se ejecuta solo al abrir el día. Usamos **`granite4:350m`**, un modelo abierto de IBM, instalado en el servidor Ollama del curso.
 
-```python
-from curso import MODELO
-
-MODELO.model_name
-```
-
-La primera vez tarda unos segundos, porque el navegador carga **Pydantic AI** y los 25 paquetes que necesita. Después ya queda cargado.
-
-## Elegir el servidor y el modelo
-
-En el panel **Modelo de IA** (a la izquierda, debajo de los temas) puedes cambiar:
-
-- **Servidor Ollama**: la dirección del servidor. Por defecto, el del curso.
-- **Modelo**: los que tenga instalados ese servidor. Por ejemplo, `granite4:350m` es **más pequeño y unas tres veces más rápido** que `qwen3.5:0.8b`, pero se equivoca todavía más (¡y a veces contesta en inglés si no se lo pides en español!).
-
-El cambio se aplica **al momento**, incluso a los agentes que ya hayas creado. Compruébalo: ejecuta este bloque, cambia el modelo en el panel y vuelve a ejecutarlo.
+## Probar el modelo
 
 ```python
 from pydantic_ai import Agent
@@ -33,20 +18,23 @@ print(resultado.output)
 print("Ha respondido:", resultado.response.model_name)
 ```
 
-También se puede cambiar desde el código:
+La primera vez tarda unos segundos más, porque el navegador carga **Pydantic AI** y los 25 paquetes que necesita.
 
-```python
-import curso
+## Cambiar de modelo o de servidor
 
-curso.configurar(modelo="granite4:350m")   # o servidor="http://localhost:11434"
-MODELO
-```
+`MODELO` es una variable normal de Python. Para usar otro modelo u otro servidor:
 
-> **💡 Más rápido en tu ordenador:** si instalas [Ollama](https://ollama.com/download) en tu ordenador y descargas un modelo (`ollama pull granite4:350m`), pon `http://localhost:11434` como servidor. Si la web no la abres desde tu propio ordenador (`localhost`), arranca Ollama con `OLLAMA_ORIGINS=*` para que el navegador pueda conectarse.
+1. Cambia el nombre del modelo o la dirección de `SERVIDOR` en el bloque **Modelo de IA** de arriba.
+2. Pulsa **Ejecutar** en ese bloque.
+3. **Vuelve a ejecutar los bloques que crean agentes** (`Agent(MODELO, ...)`): cada agente se queda con el modelo que tenía `MODELO` cuando se creó.
 
-## ¿Qué hay dentro de `curso`?
+Tu cambio se guarda en el navegador; el botón **↺** del bloque vuelve a los valores del curso.
 
-`curso` es un pequeño módulo de Python preparado para el curso. Puedes ver su código:
+> **💡 Más rápido en tu ordenador:** instala [Ollama](https://ollama.com/download), descarga el modelo con `ollama pull granite4:350m` y pon `SERVIDOR = "http://localhost:11434"`. Si la web no la abres desde tu propio ordenador (`localhost`), arranca Ollama con `OLLAMA_ORIGINS=*` para que el navegador pueda conectarse.
+
+## ¿Qué hace `crear_modelo`?
+
+`crear_modelo` viene del módulo `curso`, preparado para esta web. Puedes ver su código:
 
 ```python
 import inspect
@@ -57,15 +45,15 @@ print(inspect.getsource(curso))
 
 Fíjate en tres cosas:
 
-1. **`SERVIDOR`** y **`NOMBRE_MODELO`**: los elige el panel. A la dirección se le añade `/v1`, que es la API de Ollama compatible con la de OpenAI.
-2. **`reasoning_effort: none`**: Qwen 3.5 "razona" antes de contestar si no se le dice lo contrario. Con razonamiento, una frase tarda **más de un minuto**; sin él, **un par de segundos**. Y **`max_tokens`** limita lo largas que pueden ser las respuestas.
+1. **El servidor**: a la dirección se le añade `/v1`, que es la API de Ollama compatible con la de OpenAI.
+2. **`extra_body`**: `reasoning_effort: none` evita que los modelos que saben "razonar" lo hagan (tardarían minutos), y `max_tokens` limita lo largas que pueden ser las respuestas.
 3. **La cabecera que se quita**: el navegador solo deja enviar a otro dominio las cabeceras que ese servidor acepta (*CORS*), y Ollama no acepta una que añade la librería de OpenAI.
-4. **`ModeloDelCurso`**: envuelve al modelo real. Por eso `configurar()` puede cambiarlo sin que tengas que crear de nuevo tus agentes.
 
 ## Ten en cuenta
 
-- **Son modelos muy pequeños** (`qwen3.5:0.8b` tiene 0,8 mil millones de parámetros; ChatGPT o Gemini tienen cientos de veces más). Son rápidos y gratuitos, pero **se equivocan a menudo**. Desconfía de lo que digan y compruébalo.
-- **El servidor es compartido**: si toda la clase pregunta a la vez, las respuestas se ponen en cola y tardan más. Ten paciencia; si una petición se eterniza, pulsa **■ Detener**.
+- **Es un modelo diminuto**: `granite4:350m` tiene 350 millones de parámetros; ChatGPT o Gemini tienen miles de veces más. Es rápido y gratuito, pero **se equivoca a menudo**. Desconfía de lo que diga y compruébalo.
+- **Contesta en inglés si no se lo pides en español.** Por eso casi todos nuestros agentes llevan instrucciones.
+- **El servidor es compartido**: si toda la clase pregunta a la vez, las respuestas se ponen en cola y tardan más. Si una petición se eterniza, pulsa **■ Detener**.
 
 <details>
 <summary>¿Y fuera de esta web? (Colab o tu ordenador)</summary>
@@ -78,12 +66,12 @@ import os
 from pydantic_ai import Agent
 
 os.environ["OLLAMA_BASE_URL"] = "https://ollama.ricardorobles.es/v1"
-MODELO = "ollama:qwen3.5:0.8b"
+MODELO = "ollama:granite4:350m"
 
-agente = Agent(MODELO, model_settings={"extra_body": {"reasoning_effort": "none"}})
+agente = Agent(MODELO, model_settings={"extra_body": {"max_tokens": 700}})
 ```
 
-Si quieres **tu propio servidor**, puedes ejecutar Ollama en la GPU gratuita de Google Colab (*Entorno de ejecución → Cambiar tipo de entorno → GPU T4*) con un modelo más grande:
+Si quieres **tu propio servidor**, puedes ejecutar Ollama en la GPU gratuita de Google Colab (*Entorno de ejecución → Cambiar tipo de entorno → GPU T4*):
 
 ```python static
 !apt-get -qq update > /dev/null && apt-get -qq install -y zstd > /dev/null
@@ -92,11 +80,11 @@ Si quieres **tu propio servidor**, puedes ejecutar Ollama en la GPU gratuita de 
 import os, subprocess, time
 servidor = subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(5)
-!ollama pull qwen3:8b
+!ollama pull granite4:350m
 !pip install -q "pydantic-ai-slim[openai]"
 
 os.environ["OLLAMA_BASE_URL"] = "http://localhost:11434/v1"
-MODELO = "ollama:qwen3:8b"
+MODELO = "ollama:granite4:350m"
 ```
 
 Recuerda que en Colab, igual que aquí, se usa `await agente.run(...)`.

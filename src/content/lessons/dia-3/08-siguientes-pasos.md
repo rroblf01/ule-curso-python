@@ -8,7 +8,7 @@ runnable: false
 
 ## Usar la IA con cabeza
 
-- **Puede equivocarse.** Los modelos generan texto que *suena* correcto, pero a veces es falso (alucinaciones). Un modelo de 0,8B como el nuestro se equivoca mucho más que los grandes de la nube: revisa siempre los resúmenes y las preguntas con tus apuntes.
+- **Puede equivocarse.** Los modelos generan texto que *suena* correcto, pero a veces es falso (alucinaciones). Un modelo de 350 millones de parámetros como el nuestro se equivoca mucho más que los grandes de la nube: revisa siempre los resúmenes y las preguntas con tus apuntes.
 - **No sustituye a estudiar.** Úsala para repasar y detectar lo que no sabes, no para evitar leer el temario.
 - **Cuidado con los datos personales.** Con el servidor del curso, tus apuntes van a ese servidor y no a ninguna empresa de IA. Si usas un modelo en la nube, lo que envías sí llega al proveedor, y en los niveles gratuitos puede usarlo para mejorar sus servicios. No envíes información privada tuya ni de otras personas.
 - **Respeta las normas de tu asignatura** sobre el uso de IA en trabajos y exámenes.
@@ -29,8 +29,8 @@ runnable: false
 Una de las ventajas de Pydantic AI es que el resto del código **no cambia** si usas otro modelo u otro proveedor:
 
 ```python
-MODELO = crear_modelo("qwen3.5:0.8b")    # El servidor del curso (el de hoy)
-MODELO = "ollama:qwen3:8b"               # Ollama en tu GPU o en Colab, más grande y mejor
+MODELO = crear_modelo("granite4:350m", "https://ollama.ricardorobles.es")   # El de hoy
+MODELO = crear_modelo("granite4:350m", "http://localhost:11434")            # Ollama en tu ordenador
 MODELO = "google:gemini-2.5-flash"       # Google Gemini (requiere GOOGLE_API_KEY)
 MODELO = "openai:gpt-5.1-mini"           # OpenAI (requiere OPENAI_API_KEY)
 MODELO = "anthropic:claude-sonnet-5-5"   # Anthropic Claude (requiere ANTHROPIC_API_KEY)

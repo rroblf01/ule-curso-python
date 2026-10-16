@@ -32,7 +32,6 @@ fotosíntesis. La membrana plasmática controla qué sustancias entran y salen.
 ```python
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, NativeOutput
-from curso import MODELO
 
 
 class Resumen(BaseModel):

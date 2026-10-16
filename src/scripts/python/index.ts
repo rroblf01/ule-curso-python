@@ -5,8 +5,10 @@ const RUNNABLE = 'pre[data-language="python"]:not([data-meta~="static"])';
 const mounted = new WeakMap<HTMLElement, Playground[]>();
 
 /** Turn every runnable Python block of a lesson into an editor (only once). */
-export function mountPlaygrounds(lesson: HTMLElement) {
-	if (mounted.has(lesson) || !lesson.hasAttribute('data-runnable')) return;
+export function mountPlaygrounds(lesson: HTMLElement): Playground[] {
+	const existing = mounted.get(lesson);
+	if (existing) return existing;
+	if (!lesson.hasAttribute('data-runnable')) return [];
 	const blocks: Playground[] = [];
 	mounted.set(lesson, blocks);
 	const sources = [...lesson.querySelectorAll<HTMLElement>(RUNNABLE)];
@@ -14,11 +16,12 @@ export function mountPlaygrounds(lesson: HTMLElement) {
 		const position = index;
 		blocks.push(
 			new Playground(source, {
-				id: `${location.pathname}#${lesson.dataset.lesson}:${index}`,
+				id: `${location.pathname}#${lesson.dataset.lesson ?? lesson.dataset.setup}:${index}`,
 				previous: () => blocks.slice(0, position),
 			}),
 		);
 	});
+	return blocks;
 }
 
 export function isRunnableBlock(pre: Element) {

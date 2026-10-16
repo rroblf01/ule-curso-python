@@ -12,14 +12,15 @@ Ahora la parte más divertida: que la IA nos **haga un test** sobre los apuntes 
 ## Paso 1: definir las preguntas
 
 ```python
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, NativeOutput
-from curso import MODELO
 
 
 class Pregunta(BaseModel):
     enunciado: str = Field(description="La pregunta, clara y sin ambigüedades")
-    opciones: list[str] = Field(
+    opciones: list[Annotated[str, Field(min_length=3)]] = Field(
         min_length=4, max_length=4, description="Cuatro posibles respuestas"
     )
     correcta: int = Field(ge=0, le=3, description="Posición (0-3) de la opción correcta")
@@ -27,8 +28,13 @@ class Pregunta(BaseModel):
 
 
 class Test(BaseModel):
-    preguntas: list[Pregunta]
+    preguntas: list[Pregunta] = Field(min_length=3, max_length=5, description="Entre 3 y 5 preguntas")
 ```
+
+Las restricciones de Pydantic son nuestra mejor ayuda con un modelo tan pequeño, porque `NativeOutput` **obliga** al modelo a cumplirlas:
+
+- `min_length=3` en `preguntas`: al menos tres preguntas (los modelos pequeños tienden a quedarse cortos).
+- `Annotated[str, Field(min_length=3)]`: cada opción es un texto de 3 caracteres o más. Sin esto, a veces las opciones son solo letras sueltas: `"a"`, `"b"`, `"c"`…
 
 ## Paso 2: el agente generador
 
@@ -51,7 +57,7 @@ test = resultado.output
 print(f"Se han generado {len(test.preguntas)} preguntas")
 ```
 
-Generar el test puede tardar unos 20-30 segundos: el modelo tiene que escribir todas las preguntas, opciones y explicaciones.
+Generar el test tarda unos segundos (más si el servidor está ocupado): el modelo tiene que escribir todas las preguntas, opciones y explicaciones.
 
 > **⚠️ Revisa las preguntas:** con un modelo tan pequeño, a veces marca como correcta una opción que no lo es, o se inventa datos. Detectar esos errores con tus apuntes también es repasar.
 
@@ -141,11 +147,11 @@ asistente = AsistenteDeEstudio(apuntes)
 resumen = await asistente.resumir()
 print(resumen.resumen)
 
-test = await asistente.crear_test(num_preguntas=2, dificultad="difícil")
+test = await asistente.crear_test(num_preguntas=3, dificultad="difícil")
 hacer_test(test)
 ```
 
-Este bloque pide un resumen y un test seguidos, así que puede tardar **cerca de un minuto**, más si el servidor está ocupado.
+Este bloque pide un resumen y un test seguidos, así que tarda un poco más, sobre todo si el servidor está ocupado.
 
 > **💡 `async def`:** como los métodos usan `await` por dentro, hay que declararlos con `async def` y llamarlos también con `await`. Es la única novedad respecto a las clases de ayer.
 
@@ -154,4 +160,4 @@ Este bloque pide un resumen y un test seguidos, así que puede tardar **cerca de
 1. **Repaso de fallos:** haz que `hacer_test` devuelva también la lista de preguntas falladas y vuelve a preguntarlas al final.
 2. **Tarjetas de memoria:** crea un modelo `Tarjeta` con `pregunta` y `respuesta` y un agente que genere tarjetas tipo *flashcard*.
 3. **Verdadero o falso:** añade a `AsistenteDeEstudio` un método para tests de verdadero/falso.
-4. **Comparar modelos:** descarga `qwen3:4b` o `qwen3:14b` con `!ollama pull` y compara la calidad y la velocidad de las preguntas cambiando solo la variable `MODELO`.
+4. **Comparar modelos:** si tienes Ollama en tu ordenador, descarga otro modelo de la [biblioteca de Ollama](https://ollama.com/library), cámbialo en el bloque **Modelo de IA** y compara la calidad y la velocidad de las preguntas.

@@ -3,7 +3,7 @@ export interface Day {
 	title: string;
 	subtitle: string;
 	goal: string;
-	/** Show the "Modelo de IA" panel (server and model behind `curso.MODELO`). */
+	/** Show the "Modelo de IA" block, which defines MODELO, above every lesson. */
 	ai?: boolean;
 }
 

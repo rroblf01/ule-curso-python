@@ -1,8 +1,8 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import AiModelPanel from '../../components/AiModelPanel.astro';
 import PythonStatus from '../../components/PythonStatus.astro';
+import { MODEL_SETUP_CODE } from '../../data/ai';
 import { days } from '../../data/days';
 import '../../styles/playground.css';
 
@@ -48,10 +48,21 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 				}
 			</ol>
 			{hasRunnable && <PythonStatus />}
-			{day.ai && <AiModelPanel />}
 		</aside>
 
 		<div class="content">
+			{
+				day.ai && (
+					<section class="model-setup" data-setup="modelo" data-runnable aria-label="Modelo de IA">
+						<p class="eyebrow">Modelo de IA · para todos los temas de hoy</p>
+						<p class="setup-hint">
+							Aquí se define <code>MODELO</code>, y se ejecuta solo al abrir el día. Para usar otro modelo o
+							servidor, cámbialo, pulsa <strong>Ejecutar</strong> y vuelve a crear tus agentes.
+						</p>
+						<pre data-language="python"><code>{MODEL_SETUP_CODE}</code></pre>
+					</section>
+				)
+			}
 			{
 				lessons.map((lesson, i) => (
 					<article
@@ -99,7 +110,6 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 
 <script>
 	import { isRunnableBlock, mountPlaygrounds, mountStatusPanel } from '../../scripts/python';
-	import { mountAiPanel } from '../../scripts/python/ai-panel';
 	import { runtime } from '../../scripts/python/runtime';
 
 	function initDayPage() {
@@ -134,8 +144,11 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 				else link.removeAttribute('aria-current');
 			}
 			if (scroll) {
-				const top = content.getBoundingClientRect().top + window.scrollY - 80;
-				window.scrollTo({ top: Math.max(0, Math.min(window.scrollY, top)) });
+				// Next frame: after the browser's own jump to the #topic anchor.
+				requestAnimationFrame(() => {
+					const top = content.getBoundingClientRect().top + window.scrollY - 80;
+					window.scrollTo({ top: Math.max(0, Math.min(window.scrollY, top)) });
+				});
 			}
 		}
 
@@ -146,10 +159,15 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 
 		const statusPanel = root.querySelector<HTMLElement>('[data-python-status]');
 		if (statusPanel) mountStatusPanel(statusPanel, page.signal);
-		const aiPanel = root.querySelector<HTMLElement>('[data-ai-panel]');
-		if (aiPanel) mountAiPanel(aiPanel, page.signal);
 
-		show(current(), false);
+		// The "Modelo de IA" block defines MODELO for the whole day. Queue it right away, so it
+		// always runs before any block the student runs while Python is still loading.
+		const setup = root.querySelector<HTMLElement>('[data-setup]');
+		if (setup) mountPlaygrounds(setup)[0]?.run();
+
+		// With a #topic in the URL the browser jumps to that lesson: show the top of the content
+		// instead, so the "Modelo de IA" block above it stays in view.
+		show(current(), Boolean(root.querySelector('[data-setup]')) && location.hash !== '');
 
 		// Copy button for every static code block (runnable ones become editors)
 		for (const pre of root.querySelectorAll<HTMLPreElement>('pre')) {
@@ -283,6 +301,28 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 		min-width: 0;
 	}
 
+	.model-setup {
+		margin-bottom: 20px;
+		padding: 18px 24px 4px;
+		background: var(--surface);
+		border: 1px solid var(--accent);
+		border-radius: var(--radius);
+	}
+
+	.setup-hint {
+		margin: 4px 0 12px;
+		color: var(--muted);
+		font-size: 0.92rem;
+		line-height: 1.5;
+	}
+
+	.setup-hint code {
+		padding: 0.1em 0.35em;
+		border-radius: 5px;
+		background: var(--surface-2);
+		font-size: 0.9em;
+	}
+
 	.lesson {
 		padding: 32px 40px;
 		background: var(--surface);
@@ -345,6 +385,9 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 		}
 		.lesson {
 			padding: 24px 18px;
+		}
+		.model-setup {
+			padding: 16px 14px 2px;
 		}
 		.lesson-title {
 			font-size: 1.6rem;

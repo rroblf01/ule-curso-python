@@ -169,6 +169,8 @@ def _hint(exc, summary):
     suggestion = _suggestion(summary)
     extra = f" ¿Quizás querías decir `{suggestion}`?" if suggestion else ""
 
+    if name == "ModelHTTPError" and "not found" in msg:
+        return "El servidor no tiene ese modelo. Revisa el nombre en el bloque **Modelo de IA** de arriba (por ejemplo, `granite4:350m`)."
     if name in ("ModelAPIError", "ModelHTTPError") or isinstance(exc, (ConnectionError, TimeoutError)):
         return (
             "No se ha podido hablar con el modelo de IA. Comprueba tu conexión a Internet; si sigue fallando, "
@@ -198,6 +200,8 @@ def _hint(exc, summary):
         var = match.group(1) if match else "?"
         if var in ("true", "false", "none", "TRUE", "FALSE", "NONE"):
             return f"En Python se escribe con la primera letra en mayúscula: `{var.capitalize()}`."
+        if var == "MODELO":
+            return "`MODELO` se define en el bloque **Modelo de IA** de arriba del todo: ejecútalo primero."
         if isinstance(exc, UnboundLocalError):
             return f"Usas `{var}` dentro de la función antes de darle un valor. Si es una variable de fuera, pásala como parámetro."
         return (
@@ -374,19 +378,7 @@ async def run(code):
     finally:
         _current_task = None
         _flush_all()
-        _report_ai_changes()
     return json.dumps(result)
-
-
-def _report_ai_changes():
-    """If the block called curso.configurar(), tell the page so the panel shows it."""
-    curso = sys.modules.get("curso")
-    if curso is None:
-        return
-    server, model = curso.SERVIDOR, curso.NOMBRE_MODELO
-    if (server, model) != (os.environ.get("CURSO_SERVIDOR"), os.environ.get("CURSO_MODELO")):
-        os.environ["CURSO_SERVIDOR"], os.environ["CURSO_MODELO"] = server, model
-        sync.ai_changed(server, model)
 
 
 def cancel():
@@ -413,16 +405,6 @@ def check(code):
             }
         )
     return "null"
-
-
-def configure_ai(server, model):
-    """Choose the server and model behind `curso.MODELO` (the "Modelo de IA" panel)."""
-    os.environ["CURSO_SERVIDOR"] = str(server)
-    os.environ["CURSO_MODELO"] = str(model)
-    curso = sys.modules.get("curso")
-    if curso is not None:
-        curso.configurar(servidor=str(server), modelo=str(model))
-    return "ok"
 
 
 def set_interrupt_buffer(buffer):
@@ -530,7 +512,6 @@ async def describe(code, line, col):
 
 sync.run = run
 sync.cancel = cancel
-sync.configure_ai = configure_ai
 sync.check = check
 sync.reset = reset
 sync.set_interrupt_buffer = set_interrupt_buffer

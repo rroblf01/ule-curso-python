@@ -11,7 +11,6 @@ En Pydantic AI, un **agente** (`Agent`) es un objeto que sabe hablar con un mode
 
 ```python
 from pydantic_ai import Agent
-from curso import MODELO
 
 agente = Agent(MODELO)
 
@@ -19,9 +18,11 @@ resultado = await agente.run("Explica qué es una variable en Python en una sola
 print(resultado.output)
 ```
 
-- `Agent(MODELO)` crea el agente (instanciamos la clase).
+- `Agent(MODELO)` crea el agente (instanciamos la clase). `MODELO` viene del bloque **Modelo de IA** de arriba.
 - `agente.run(...)` envía la pregunta al modelo (al servidor del curso).
 - `resultado.output` contiene la respuesta.
+
+¿Te ha contestado en inglés? Es normal con un modelo tan pequeño: en el siguiente apartado le daremos instrucciones.
 
 ### ¿Y ese `await`?
 

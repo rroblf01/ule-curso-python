@@ -16,13 +16,13 @@ Hasta ahora los has usado desde una web de chat. Hoy vas a usarlos **desde tus p
 
 | | Modelos en la nube | Modelos abiertos (*open weights*) |
 |---|---|---|
-| Ejemplos | ChatGPT, Gemini, Claude | Qwen, Llama, Gemma, Mistral |
+| Ejemplos | ChatGPT, Gemini, Claude | Granite, Llama, Gemma, Mistral |
 | ¿Dónde se ejecutan? | En los servidores de la empresa | En **tu** máquina (o la que tú elijas) |
 | ¿Qué necesitas? | Una clave de API (normalmente de pago) | Una GPU y descargar el modelo |
 | Capacidad | Los más potentes | Algo menos potentes, pero muy útiles |
 | Privacidad | Tus datos salen hacia el proveedor | Tus datos no salen de la máquina |
 
-Hoy usaremos un **modelo abierto**, **Qwen 3.5** (de Alibaba), que está instalado en un **servidor del curso** con Ollama. Lo usaremos desde esta misma web, igual que los días anteriores: **sin claves, sin cuentas y sin instalar nada**.
+Hoy usaremos un **modelo abierto**, **Granite 4** (de IBM), que está instalado en un **servidor del curso** con Ollama. Lo usaremos desde esta misma web, igual que los días anteriores: **sin claves, sin cuentas y sin instalar nada**.
 
 ## Las piezas que vamos a usar
 
@@ -34,7 +34,7 @@ Tu navegador: Python (PyScript) + Pydantic AI
 Servidor del curso: Ollama
    │
    ▼
-Modelo Qwen 3.5 (0,8B)
+Modelo granite4:350m
 ```
 
 - **[Ollama](https://ollama.com):** un programa que descarga modelos abiertos y los sirve a través de una **API**, igual que lo harían OpenAI o Google, pero en un servidor propio.

@@ -11,7 +11,7 @@ Web del curso introductorio de Python para estudiantes de 1.º de la Universidad
 Los alumnos no instalan nada:
 
 - Cada bloque de código es un editor que ejecuta Python en el navegador con [PyScript](https://pyscript.net) (Pyodide en un *web worker*). Incluye autocompletado y documentación en español, firmas de funciones, errores de sintaxis en vivo, errores de ejecución explicados, `input()`, `await` y botón para detener la ejecución.
-- **Día 3:** Pydantic AI también se ejecuta en el navegador y habla con un modelo abierto (`qwen3.5:0.8b`) en un servidor Ollama del curso. Los alumnos lo importan ya configurado con `from curso import MODELO`.
+- **Día 3:** Pydantic AI también se ejecuta en el navegador y habla con un modelo abierto (`granite4:350m`) en un servidor Ollama del curso. Encima de cada tema del día hay un bloque **Modelo de IA** que define la variable `MODELO`.
 
 ## Desarrollo
 
@@ -92,16 +92,16 @@ Las soluciones de los ejercicios van dentro de `<details><summary>Ver solución<
 
 - **Primera carga de Python:** cada alumno descarga unos 15 MB la primera vez (después queda en la caché del navegador). Con toda la clase en la misma wifi, pide que abran la web al empezar la clase: la carga empieza sola.
 - **Ritmo del día 1:** es el día más denso. Los minutos están ajustados a 60; en clase se hacen 2 + 1 ejercicios y el resto queda para casa.
-- **Día 3: el servidor de IA.** El servidor y el modelo por defecto están en [src/data/ai.ts](src/data/ai.ts) (`https://ollama.ricardorobles.es`, `qwen3.5:0.8b`). En clase se cambian **sin tocar código** desde el panel **Modelo de IA** de la barra lateral del día 3, que lista los modelos instalados en el servidor; el cambio se aplica al momento, también a los agentes ya creados, y cada navegador lo recuerda. Desde el código: `curso.configurar(servidor=..., modelo=...)` ([public/python/curso.py](public/python/curso.py)). Lo que necesita el servidor:
+- **Día 3: el servidor de IA.** El servidor y el modelo por defecto están en [src/data/ai.ts](src/data/ai.ts) (`https://ollama.ricardorobles.es`, `granite4:350m`), que genera el bloque **Modelo de IA** que se muestra encima de cada tema del día 3 y se ejecuta solo al abrir el día. En clase se cambian editando ese bloque (`MODELO = crear_modelo("granite4:350m", SERVIDOR)`) y pulsando **Ejecutar**; cada navegador recuerda el cambio y **↺** vuelve a los valores del curso. `crear_modelo` está en [public/python/curso.py](public/python/curso.py). Lo que necesita el servidor:
   - `OLLAMA_ORIGINS=*` (o el dominio de la web): sin él, Ollama rechaza con 403 las peticiones del navegador.
   - Un volumen en `/root/.ollama`, para no perder el modelo al redesplegar.
   - Capacidad para toda la clase: en CPU el modelo genera unos 17 tokens/s y las peticiones se ponen en cola. Valora subir `OLLAMA_NUM_PARALLEL` si el servidor tiene núcleos y memoria de sobra.
 - **Detalles de `curso.py`, todos comprobados con pydantic-ai 2.57 y Ollama 0.40.5:**
-  - `reasoning_effort: "none"` va en `extra_body`: Qwen 3.5 razona por defecto (una frase: 90 s con razonamiento, 2 s sin él) y el ajuste genérico `thinking=False` de pydantic-ai no llega a enviarse para este modelo.
+  - `reasoning_effort: "none"` va en `extra_body`, por si se usa un modelo que razona (con uno así, una frase tardaba 90 s con razonamiento y 2 s sin él); el ajuste genérico `thinking=False` de pydantic-ai no llegaba a enviarse.
   - `max_tokens` también va en `extra_body`: pydantic-ai envía `max_completion_tokens`, que esta versión de Ollama ignora.
   - Se elimina la cabecera `x-stainless-read-timeout` que añade el SDK de OpenAI, porque no está en la lista de cabeceras que el CORS de Ollama permite.
-- **Demostración con un Ollama local:** arranca Ollama en tu portátil con `OLLAMA_ORIGINS=*` (necesario si la web no se abre desde `localhost`), descarga el modelo (`ollama pull granite4:350m`) y pon `http://localhost:11434` en el panel. Si la web está publicada en HTTPS, Chrome puede pedir permiso para que una web acceda a la red local; si la abres con `npm run dev` en el mismo portátil no hace falta.
-- **Calidad del modelo:** con 0,8B de parámetros contesta rápido pero se equivoca a menudo (por ejemplo, marca como correcta una opción errónea en los tests). Los temas lo advierten y lo usan como ejercicio de espíritu crítico; con un servidor más potente, basta con elegir otro modelo en el panel.
+- **Demostración con un Ollama local:** arranca Ollama en tu portátil con `OLLAMA_ORIGINS=*` (necesario si la web no se abre desde `localhost`), descarga el modelo (`ollama pull granite4:350m`) y cambia `SERVIDOR = "http://localhost:11434"` en el bloque **Modelo de IA**. Si la web está publicada en HTTPS, Chrome puede pedir permiso para que una web acceda a la red local; si la abres con `npm run dev` en el mismo portátil no hace falta.
+- **Calidad del modelo:** con 350 millones de parámetros contesta muy rápido (unos 50 tokens/s en el servidor) pero se equivoca a menudo y contesta en inglés si no se le pide en español. Los temas lo advierten y lo usan como ejercicio de espíritu crítico; con un servidor más potente, basta con poner otro modelo en el bloque.
 - **Salidas estructuradas con `NativeOutput`:** con modelos de Ollama, el modo por defecto de Pydantic AI (llamada a herramienta) falla más y necesita reintentos. `NativeOutput` hace que Ollama restrinja la generación al esquema JSON.
 - **`await` y no `run_sync`:** en el navegador (igual que en Colab) hay que usar `await agente.run(...)`. Si un alumno escribe `run_sync`, el editor lo detecta antes de ejecutar y le explica qué hacer, porque en el navegador se quedaría colgado.
 - **Plan B:** si el servidor no responde, el tema 2 del día 3 explica cómo ejecutar Ollama en la GPU gratuita de Colab, y el último tema cómo usar Gemini (nivel gratuito con clave de [Google AI Studio](https://aistudio.google.com/apikey)).
