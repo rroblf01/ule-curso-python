@@ -293,6 +293,12 @@ export class Playground {
 	}
 
 	private append(node: Node, chars = 0) {
+		// A block element already starts on a new line: drop the newline that ends the previous text.
+		if (node instanceof HTMLElement && node.tagName === 'DIV') {
+			const text = this.lastStream?.node;
+			if (text?.textContent?.endsWith('\n')) text.textContent = text.textContent.slice(0, -1);
+			this.lastStream = null;
+		}
 		this.output.hidden = false;
 		this.output.append(node);
 		this.outputChars += chars;
