@@ -5,11 +5,17 @@ order: 12
 minutes: 4
 ---
 
-Haz en clase el **1** y el **2**. El resto, para practicar en casa. Intenta resolverlos **antes** de mirar la solución.
+Haz en clase el **1** y el **2**. El resto, para practicar en casa. Cada ejercicio tiene un editor con los datos de partida: escribe ahí tu solución y ejecútala. Intenta resolverlos **antes** de mirar la solución.
 
 ### 1. Par o impar
 
 Dado un número guardado en una variable, muestra si es par o impar.
+
+```python
+numero = 17
+
+# Escribe aquí tu solución
+```
 
 <details>
 <summary>Ver solución</summary>
@@ -29,6 +35,12 @@ else:
 
 Muestra la tabla de multiplicar del 9 (del 9 × 1 al 9 × 10).
 
+```python
+numero = 9
+
+# Escribe aquí tu solución
+```
+
 <details>
 <summary>Ver solución</summary>
 
@@ -44,6 +56,13 @@ for i in range(1, 11):
 ### 3. Contar vocales
 
 Cuenta cuántas vocales tiene la frase `"La Universidad de León fue fundada en 1979"`.
+
+```python
+frase = "La Universidad de León fue fundada en 1979"
+vocales = "aeiouáéíóú"
+
+# Escribe aquí tu solución
+```
 
 <details>
 <summary>Ver solución</summary>
@@ -68,6 +87,8 @@ Con este diccionario, muestra el nombre de cada alumno con su calificación (Sus
 
 ```python
 notas = {"Ana": 8.5, "Pablo": 4.2, "Marta": 9.6, "Hugo": 6.1, "Sara": 3.9}
+
+# Escribe aquí tu solución
 ```
 
 <details>
@@ -102,6 +123,14 @@ print(f"Han aprobado {aprobados} de {len(notas)}")
 El programa "piensa" un número del 1 al 100 y el usuario intenta adivinarlo. Tras cada intento, indica si el número secreto es mayor o menor. Al acertar, muestra cuántos intentos ha necesitado.
 
 > **Pista:** `import random` y `random.randint(1, 100)` generan un número aleatorio.
+
+```python
+import random
+
+secreto = random.randint(1, 100)
+
+# Escribe aquí tu solución
+```
 
 <details>
 <summary>Ver solución</summary>

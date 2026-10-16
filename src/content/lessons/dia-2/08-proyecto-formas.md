@@ -29,6 +29,42 @@ Intenta hacerlo por tu cuenta antes de mirar la solución. Empieza por la clase 
 4. Crea una lista con varias formas, recórrela y muestra la descripción de cada una.
 5. **Extra:** muestra cuál es la forma con mayor área.
 
+```python
+import math
+
+
+class Forma:
+    def __init__(self, nombre):
+        self.nombre = nombre
+
+    def area(self):
+        raise NotImplementedError("Cada forma debe implementar area()")
+
+    def perimetro(self):
+        raise NotImplementedError("Cada forma debe implementar perimetro()")
+
+    def describir(self):
+        # Devuelve un texto con el nombre, el área y el perímetro
+        pass
+
+
+class Circulo(Forma):
+    def __init__(self, diametro):
+        super().__init__("Círculo")
+        self.diametro = diametro
+
+    # Completa area() y perimetro()
+
+
+# Crea aquí las clases Rectangulo y Triangulo
+
+
+formas = [Circulo(10)]
+
+for forma in formas:
+    print(forma.describir())
+```
+
 <details>
 <summary>Ver solución</summary>
 

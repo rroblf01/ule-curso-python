@@ -64,6 +64,16 @@ Los métodos que empiezan y terminan con doble guion bajo (`__init__`, `__str__`
 
 Crea una clase `CuentaBancaria` con un `titular` y un `saldo` (que empiece en 0), y los métodos `ingresar(cantidad)` y `retirar(cantidad)`. Si no hay saldo suficiente, `retirar` debe mostrar un aviso.
 
+```python
+class CuentaBancaria:
+    def __init__(self, titular, saldo=0):
+        # Escribe aquí tu solución
+        pass
+
+
+cuenta = CuentaBancaria("Lucía")
+```
+
 <details>
 <summary>Ver solución</summary>
 

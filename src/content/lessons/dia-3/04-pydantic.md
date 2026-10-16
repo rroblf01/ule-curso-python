@@ -7,6 +7,8 @@ minutes: 7
 
 Antes de pedirle datos ordenados a la IA, necesitamos una forma de **describir qué datos queremos**. Para eso está **Pydantic** (se instala automáticamente con Pydantic AI).
 
+> **💡 Este tema se puede probar aquí mismo:** Pydantic funciona en el navegador, así que los ejemplos son editores como los de los días 1 y 2. La primera ejecución tarda un poco más porque descarga la librería.
+
 ## `BaseModel`: una clase con superpoderes
 
 Con Pydantic creamos clases que **heredan** de `BaseModel` (¡herencia, como ayer!) y declaramos sus atributos con **anotaciones de tipo**:

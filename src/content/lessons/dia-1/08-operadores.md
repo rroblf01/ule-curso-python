@@ -21,8 +21,9 @@ Comparan dos valores y devuelven un booleano (`True` o `False`):
 > **⚠️ Error muy común:** `=` **asigna** un valor y `==` **compara**. `nota = 5` guarda un 5; `nota == 5` pregunta si vale 5.
 
 ```python
+nota = 7
 "hola" == "Hola"    # False: distingue mayúsculas
-0 < nota <= 10      # Python permite encadenar comparaciones
+0 < nota <= 10      # True: Python permite encadenar comparaciones
 ```
 
 ## Operadores lógicos

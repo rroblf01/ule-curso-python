@@ -40,7 +40,19 @@ while True:
     print(f"Has escrito: {texto}")
 ```
 
-> **⚠️ Cuidado con los bucles infinitos:** si la condición nunca se vuelve falsa, el programa no termina. En Colab puedes pararlo con el botón ⏹ de la celda.
+> **⚠️ Cuidado con los bucles infinitos:** si la condición nunca se vuelve falsa, el programa no termina. Puedes pararlo con el botón **■ Detener** del editor.
+
+Pruébalo: ejecuta este bucle, espera un par de segundos y pulsa **■ Detener**. Después ejecuta el bloque siguiente para ver cuántas vueltas le ha dado tiempo a dar.
+
+```python
+vueltas = 0
+while True:
+    vueltas += 1
+```
+
+```python
+print(f"El bucle ha dado {vueltas:,} vueltas")
+```
 
 ## ¿`for` o `while`?
 

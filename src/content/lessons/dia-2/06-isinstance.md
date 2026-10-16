@@ -75,4 +75,10 @@ def describir(valor):
     elif isinstance(valor, list):
         return f"Lista con {len(valor)} elementos"
     return "No sé qué es esto"
+
+
+print(describir("Hola"))
+print(describir(3.5))
+print(describir([1, 2, 3]))
+print(describir(ana))
 ```

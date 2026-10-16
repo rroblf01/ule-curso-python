@@ -37,6 +37,8 @@ nota_final = 8.5     # ✅ correcto
 2nota = 7            # ❌ error: empieza por número
 ```
 
+Ejecútalo para ver cómo se explica el error, y después corrígelo cambiando el nombre de la variable.
+
 ## Comentarios
 
 Los comentarios son texto que Python **ignora**. Sirven para explicar el *porqué* del código a otras personas (o a ti dentro de un mes).

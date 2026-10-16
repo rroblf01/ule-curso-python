@@ -30,8 +30,11 @@ del alumno["grado"]             # borra una clave
 ## Consultar con seguridad
 
 ```python
-alumno["telefono"]                      # ❌ KeyError: la clave no existe
-alumno.get("telefono")                  # None (no da error)
+alumno["telefono"]   # ❌ KeyError: la clave no existe
+```
+
+```python
+alumno.get("telefono")                  # None (no da error, pero tampoco muestra nada)
 alumno.get("telefono", "sin teléfono")  # valor por defecto
 "email" in alumno                       # True
 ```

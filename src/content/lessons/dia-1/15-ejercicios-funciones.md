@@ -5,11 +5,20 @@ order: 15
 minutes: 2
 ---
 
-Haz en clase el **1**. El resto, para casa.
+Haz en clase el **1**. El resto, para casa. Completa las funciones en los editores: las líneas de `print` del final te dicen qué deberían mostrar.
 
 ### 1. Área de un rectángulo
 
 Crea una función `area_rectangulo(base, altura)` que devuelva el área.
+
+```python
+def area_rectangulo(base, altura):
+    # Escribe aquí tu solución
+    pass
+
+
+print(area_rectangulo(4, 3))  # debería mostrar 12
+```
 
 <details>
 <summary>Ver solución</summary>
@@ -26,6 +35,16 @@ print(area_rectangulo(4, 3))   # 12
 ### 2. ¿Es primo?
 
 Crea una función `es_primo(n)` que devuelva `True` si `n` es primo y `False` si no. Úsala para mostrar los primos del 1 al 50.
+
+```python
+def es_primo(n):
+    # Escribe aquí tu solución
+    pass
+
+
+print(es_primo(7))  # debería mostrar True
+print(es_primo(8))  # debería mostrar False
+```
 
 <details>
 <summary>Ver solución</summary>
@@ -53,6 +72,15 @@ print(primos)
 
 Crea una función `resumen_notas(notas)` que reciba una lista de notas y devuelva un diccionario con la media (redondeada a 2 decimales), la nota máxima, la mínima y el número de aprobados.
 
+```python
+def resumen_notas(notas):
+    # Escribe aquí tu solución
+    pass
+
+
+print(resumen_notas([7.5, 4.0, 9.25, 6.0, 3.5]))
+```
+
 <details>
 <summary>Ver solución</summary>
 
@@ -79,6 +107,16 @@ print(resumen_notas([7.5, 4.0, 9.25, 6.0, 3.5]))
 
 Crea una función `es_palindromo(texto)` que indique si un texto se lee igual al derecho que al revés, ignorando mayúsculas y espacios. Prueba con `"Anita lava la tina"`.
 
+```python
+def es_palindromo(texto):
+    # Escribe aquí tu solución
+    pass
+
+
+print(es_palindromo("Anita lava la tina"))  # debería mostrar True
+print(es_palindromo("Python"))              # debería mostrar False
+```
+
 <details>
 <summary>Ver solución</summary>
 
@@ -96,6 +134,15 @@ print(es_palindromo("Python"))              # False
 ### 5. Calculadora interactiva
 
 Crea una función `calcular(a, b, operacion)` que haga `+`, `-`, `*` o `/` (y avise si se divide entre 0). Después, pide al usuario los dos números y la operación con `input` en un bucle hasta que escriba `salir`.
+
+```python
+def calcular(a, b, operacion):
+    # Escribe aquí tu solución
+    pass
+
+
+# Y aquí el bucle que pide los datos con input()
+```
 
 <details>
 <summary>Ver solución</summary>

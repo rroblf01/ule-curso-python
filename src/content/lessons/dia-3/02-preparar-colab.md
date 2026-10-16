@@ -8,6 +8,15 @@ runnable: false
 
 Vamos a montar nuestro propio "servidor de IA" dentro de Colab. Sin claves, sin cuentas de pago.
 
+## Google Colab en un minuto
+
+Hasta ahora hemos ejecutado Python en el navegador, pero un modelo de IA necesita una **GPU** y varios GB de memoria. [Google Colab](https://colab.research.google.com) nos presta gratis un ordenador de Google con GPU, al que accedemos desde un **cuaderno** (*notebook*) parecido a los editores de esta web:
+
+- El cuaderno está formado por **celdas** de código. Se ejecutan con ▶ o con **Mayús + Enter**.
+- Como aquí, las variables de una celda existen en las demás si las has ejecutado antes, y el valor de la última línea se muestra automáticamente.
+- Se necesita una cuenta de Google. Los cuadernos se guardan en tu Google Drive, en la carpeta **Colab Notebooks**.
+- Copia el código de esta web con el botón de copiar de cada bloque y pégalo en una celda.
+
 ## 1. Activar la GPU
 
 1. Abre un cuaderno nuevo en [colab.new](https://colab.new).

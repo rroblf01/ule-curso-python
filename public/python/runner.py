@@ -276,7 +276,8 @@ async def run(code):
     try:
         tree = ast.parse(code, filename)
         for node in tree.body:
-            if isinstance(node, ast.Expr):
+            is_comment = isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+            if isinstance(node, ast.Expr) and not is_comment:
                 value = eval(compile(ast.Expression(node.value), filename, "eval"), NS)
                 if value is not None:
                     _flush_all()

@@ -62,8 +62,8 @@ class Alumno:
         self.nombre = nombre
         Alumno.total += 1
 
-Alumno("Ana")
-Alumno("Hugo")
+ana = Alumno("Ana")
+hugo = Alumno("Hugo")
 print(Alumno.total)   # 2
 ```
 
