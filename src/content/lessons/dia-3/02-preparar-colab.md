@@ -3,6 +3,7 @@ title: "Preparar Colab: GPU y Ollama"
 day: 3
 order: 2
 minutes: 8
+runnable: false
 ---
 
 Vamos a montar nuestro propio "servidor de IA" dentro de Colab. Sin claves, sin cuentas de pago.

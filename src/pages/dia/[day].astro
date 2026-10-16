@@ -1,7 +1,9 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import PythonStatus from '../../components/PythonStatus.astro';
 import { days } from '../../data/days';
+import '../../styles/playground.css';
 
 export function getStaticPaths() {
 	return days.map((day) => ({ params: { day: String(day.number) }, props: { day } }));
@@ -22,6 +24,7 @@ const lessons = await Promise.all(
 );
 
 const totalMinutes = lessons.reduce((sum, lesson) => sum + lesson.data.minutes, 0);
+const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 ---
 
 <Base title={`Día ${day.number}: ${day.title}`} description={day.goal} currentDay={day.number}>
@@ -43,12 +46,18 @@ const totalMinutes = lessons.reduce((sum, lesson) => sum + lesson.data.minutes, 
 					))
 				}
 			</ol>
+			{hasRunnable && <PythonStatus />}
 		</aside>
 
 		<div class="content">
 			{
 				lessons.map((lesson, i) => (
-					<article class="lesson" id={lesson.slug} data-lesson={lesson.slug}>
+					<article
+						class="lesson"
+						id={lesson.slug}
+						data-lesson={lesson.slug}
+						data-runnable={lesson.data.runnable ? '' : undefined}
+					>
 						<p class="eyebrow">
 							Tema {i + 1} de {lessons.length} · {lesson.data.minutes} min
 						</p>
@@ -87,6 +96,8 @@ const totalMinutes = lessons.reduce((sum, lesson) => sum + lesson.data.minutes, 
 </Base>
 
 <script>
+	import { isRunnableBlock, mountPlaygrounds, mountStatusPanel } from '../../scripts/python';
+
 	const root = document.querySelector<HTMLElement>('[data-lessons]')!;
 	const lessons = [...root.querySelectorAll<HTMLElement>('[data-lesson]')];
 	const links = [...root.querySelectorAll<HTMLAnchorElement>('[data-topic]')];
@@ -97,6 +108,7 @@ const totalMinutes = lessons.reduce((sum, lesson) => sum + lesson.data.minutes, 
 	function show(slug: string, scroll: boolean) {
 		const target = lessons.find((l) => l.dataset.lesson === slug) ?? lessons[0];
 		for (const lesson of lessons) lesson.hidden = lesson !== target;
+		mountPlaygrounds(target);
 		for (const link of links) {
 			const active = link.dataset.topic === target.dataset.lesson;
 			link.classList.toggle('active', active);
@@ -109,11 +121,15 @@ const totalMinutes = lessons.reduce((sum, lesson) => sum + lesson.data.minutes, 
 		}
 	}
 
+	const statusPanel = root.querySelector<HTMLElement>('[data-python-status]');
+	if (statusPanel) mountStatusPanel(statusPanel);
+
 	show(decodeURIComponent(location.hash.slice(1)), false);
 	window.addEventListener('hashchange', () => show(decodeURIComponent(location.hash.slice(1)), true));
 
-	// Copy button for every code block
+	// Copy button for every static code block (runnable ones become editors)
 	for (const pre of root.querySelectorAll<HTMLPreElement>('pre')) {
+		if (isRunnableBlock(pre)) continue;
 		const button = document.createElement('button');
 		button.type = 'button';
 		button.className = 'copy';

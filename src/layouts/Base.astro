@@ -19,6 +19,14 @@ const {
 <html lang="es">
 	<head>
 		<meta charset="utf-8" />
+		<script is:inline>
+			// Hosts that cannot send COOP/COEP headers (e.g. GitHub Pages): add them with a service worker.
+			if (!window.crossOriginIsolated && window.isSecureContext && 'serviceWorker' in navigator) {
+				const coi = document.createElement('script');
+				coi.src = '/mini-coi.js';
+				document.head.append(coi);
+			}
+		</script>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="description" content={description} />
 		<meta name="generator" content={Astro.generator} />

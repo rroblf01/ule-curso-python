@@ -3,6 +3,7 @@ title: Tu primer agente
 day: 3
 order: 3
 minutes: 7
+runnable: false
 ---
 
 En Pydantic AI, un **agente** (`Agent`) es un objeto que sabe hablar con un modelo de IA. Sí, **un objeto**: `Agent` es una clase, como las que creamos ayer.

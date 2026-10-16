@@ -3,6 +3,7 @@ title: ¿Qué es un LLM y cómo se usa desde Python?
 day: 3
 order: 1
 minutes: 5
+runnable: false
 ---
 
 > **⏱️ Antes de empezar:** abre Colab y ejecuta ya la **celda de preparación** del tema siguiente. Tarda unos minutos en descargar el modelo, así que lo dejamos trabajando mientras vemos la teoría.

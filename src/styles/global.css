@@ -13,6 +13,20 @@
 	--code-bg: #f3f5f8;
 	--tip-bg: #fff8db;
 	--tip-border: #e6b800;
+	--error: #cf222e;
+	--error-bg: #ffebe9;
+	--success: #1a7f37;
+	--active-line: rgba(48, 105, 152, 0.06);
+	--selection: rgba(48, 105, 152, 0.2);
+	--tok-keyword: #cf222e;
+	--tok-string: #0a3069;
+	--tok-number: #0550ae;
+	--tok-comment: #6e7781;
+	--tok-function: #8250df;
+	--tok-class: #953800;
+	--tok-self: #953800;
+	--tok-property: #0550ae;
+	--tok-operator: #cf222e;
 	--radius: 12px;
 	--nav-h: 64px;
 	--font: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, 'Helvetica Neue', sans-serif;
@@ -33,6 +47,20 @@
 		--code-bg: #0d1117;
 		--tip-bg: #2b2611;
 		--tip-border: #b38f00;
+		--error: #ff7b72;
+		--error-bg: #3a1d1d;
+		--success: #3fb950;
+		--active-line: rgba(106, 167, 220, 0.07);
+		--selection: rgba(106, 167, 220, 0.28);
+		--tok-keyword: #ff7b72;
+		--tok-string: #a5d6ff;
+		--tok-number: #79c0ff;
+		--tok-comment: #8b949e;
+		--tok-function: #d2a8ff;
+		--tok-class: #ffa657;
+		--tok-self: #ffa657;
+		--tok-property: #79c0ff;
+		--tok-operator: #ff7b72;
 		color-scheme: dark;
 	}
 }
@@ -49,6 +77,20 @@
 	--code-bg: #0d1117;
 	--tip-bg: #2b2611;
 	--tip-border: #b38f00;
+	--error: #ff7b72;
+	--error-bg: #3a1d1d;
+	--success: #3fb950;
+	--active-line: rgba(106, 167, 220, 0.07);
+	--selection: rgba(106, 167, 220, 0.28);
+	--tok-keyword: #ff7b72;
+	--tok-string: #a5d6ff;
+	--tok-number: #79c0ff;
+	--tok-comment: #8b949e;
+	--tok-function: #d2a8ff;
+	--tok-class: #ffa657;
+	--tok-self: #ffa657;
+	--tok-property: #79c0ff;
+	--tok-operator: #ff7b72;
 	color-scheme: dark;
 }
 

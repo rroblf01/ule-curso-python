@@ -1,0 +1,261 @@
+/* Runnable Python blocks (see src/scripts/python/playground.ts) */
+
+.pg {
+	margin: 0 0 1.2em;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	overflow: hidden;
+	background: var(--code-bg);
+}
+
+.pg:focus-within {
+	border-color: var(--accent);
+}
+
+.pg-editor .cm-editor {
+	max-height: 70vh;
+}
+
+.pg-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 8px;
+	border-top: 1px solid var(--border);
+	background: var(--surface-2);
+}
+
+.pg-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 12px;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--surface);
+	color: var(--text);
+	font: 600 0.82rem var(--font);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.pg-btn[hidden] {
+	display: none;
+}
+
+.pg-btn:hover:not(:disabled) {
+	border-color: var(--accent);
+}
+
+.pg-btn:disabled {
+	opacity: 0.55;
+	cursor: progress;
+}
+
+.pg-run {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent-contrast);
+}
+
+.pg-stop {
+	color: var(--error);
+}
+
+.pg-icon {
+	padding: 6px;
+	border-color: transparent;
+	background: transparent;
+	color: var(--muted);
+}
+
+.pg-status {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--muted);
+	font-size: 0.8rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.pg:not(.pg-edited) .pg-bar .pg-icon[title^='Restaurar'] {
+	visibility: hidden;
+}
+
+.pg-output {
+	max-height: 420px;
+	overflow: auto;
+	padding: 10px 14px;
+	border-top: 1px solid var(--border);
+	background: var(--surface);
+	font: 0.88rem/1.55 var(--mono);
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.pg-stderr {
+	color: var(--error);
+}
+
+.pg-result {
+	color: var(--muted);
+}
+
+.pg-result::before {
+	content: '→ ';
+	color: var(--accent);
+}
+
+.pg-note {
+	color: var(--muted);
+	font: italic 0.85rem var(--font);
+	white-space: normal;
+}
+
+.pg-ask {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	white-space: pre-wrap;
+}
+
+.pg-ask input {
+	min-width: 12ch;
+	padding: 2px 8px;
+	border: 1px solid var(--accent);
+	border-radius: 6px;
+	background: var(--code-bg);
+	color: var(--text);
+	font: inherit;
+}
+
+.pg-ask input:focus {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}
+
+.pg-ask small {
+	color: var(--muted);
+	font: 0.75rem var(--font);
+}
+
+.pg-typed {
+	color: var(--accent);
+	font-weight: 600;
+}
+
+.pg-error {
+	margin: 6px 0 2px;
+	padding: 10px 12px;
+	border-left: 4px solid var(--error);
+	border-radius: 0 8px 8px 0;
+	background: var(--error-bg);
+	font-family: var(--font);
+	white-space: normal;
+}
+
+.pg-error p {
+	margin: 0 0 6px;
+}
+
+.pg-error-title strong {
+	color: var(--error);
+}
+
+.pg-error code,
+.pg-doc code,
+.pg-signature code,
+.cm-diagnostic code {
+	padding: 0.05em 0.35em;
+	border-radius: 4px;
+	background: var(--surface-2);
+	font: 0.9em var(--mono);
+}
+
+.pg-error details {
+	margin: 4px 0 0;
+	border: 0;
+	background: transparent;
+}
+
+.pg-error summary {
+	padding: 0;
+	color: var(--muted);
+	font-size: 0.8rem;
+	font-weight: 500;
+}
+
+.pg-error details[open] summary {
+	border: 0;
+}
+
+.pg-error pre {
+	margin: 6px 0 0;
+	padding: 8px 10px;
+	border: 0;
+	border-radius: 6px;
+	background: var(--code-bg);
+	font-size: 0.8rem;
+	white-space: pre-wrap;
+}
+
+.pg-secondary {
+	margin-top: 8px;
+	white-space: normal;
+	text-align: left;
+}
+
+/* Tooltips: documentation, signatures */
+
+.pg-doc,
+.pg-signature {
+	padding: 8px 12px;
+	font-size: 0.85rem;
+	line-height: 1.45;
+}
+
+.pg-doc p,
+.pg-signature p {
+	margin: 6px 0 0;
+}
+
+.pg-doc .pg-doc-sig,
+.pg-signature > code {
+	padding: 0;
+	background: none;
+	font-weight: 600;
+	color: var(--tok-function);
+}
+
+.pg-signature > code strong {
+	color: var(--text);
+	text-decoration: underline;
+	text-decoration-color: var(--yellow);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 3px;
+}
+
+.pg-doc .pg-doc-example {
+	display: block;
+	margin-top: 8px;
+	padding: 4px 8px;
+	white-space: pre;
+	overflow-x: auto;
+}
+
+.pg-doc .pg-doc-raw {
+	color: var(--muted);
+	white-space: pre-wrap;
+	font-size: 0.8rem;
+}
+
+@media (max-width: 560px) {
+	.pg-btn span {
+		display: none;
+	}
+	.pg-run span {
+		display: inline;
+	}
+}

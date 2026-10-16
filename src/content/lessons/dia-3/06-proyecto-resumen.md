@@ -3,6 +3,7 @@ title: "Proyecto (1/2): resumir tus apuntes"
 day: 3
 order: 6
 minutes: 8
+runnable: false
 ---
 
 Empezamos el **asistente de estudio**. Primero, el resumen.

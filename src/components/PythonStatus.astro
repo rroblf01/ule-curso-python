@@ -1,0 +1,99 @@
+<section class="python-status" data-python-status aria-label="Estado de Python">
+	<div class="row">
+		<span class="dot" data-status-dot data-state="idle" aria-hidden="true"></span>
+		<div>
+			<p class="title">Python en el navegador</p>
+			<p class="label" data-status-label role="status">Sin cargar</p>
+		</div>
+	</div>
+	<div class="actions">
+		<button type="button" data-action="load">Cargar ahora</button>
+		<button type="button" data-action="reset" hidden title="Borra todas las variables, funciones y clases creadas">
+			Borrar variables
+		</button>
+	</div>
+</section>
+
+<style>
+	.python-status {
+		margin-top: 16px;
+		padding: 12px 14px;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		background: var(--surface-2);
+		font-size: 0.85rem;
+	}
+
+	.row {
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
+	}
+
+	.dot {
+		flex: none;
+		width: 10px;
+		height: 10px;
+		margin-top: 5px;
+		border-radius: 999px;
+		background: var(--muted);
+	}
+
+	.dot[data-state='loading'],
+	.dot[data-state='busy'] {
+		background: var(--yellow);
+		animation: pulse 1s ease-in-out infinite;
+	}
+
+	.dot[data-state='ready'] {
+		background: var(--success);
+	}
+
+	.dot[data-state='error'],
+	.dot[data-state='unsupported'] {
+		background: var(--error);
+	}
+
+	@keyframes pulse {
+		50% {
+			opacity: 0.35;
+		}
+	}
+
+	p {
+		margin: 0;
+		line-height: 1.4;
+	}
+
+	.title {
+		font-weight: 600;
+	}
+
+	.label {
+		color: var(--muted);
+	}
+
+	.actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 10px;
+	}
+
+	.actions:not(:has(button:not([hidden]))) {
+		display: none;
+	}
+
+	button {
+		padding: 5px 12px;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		background: var(--surface);
+		color: var(--text);
+		font: 600 0.8rem var(--font);
+		cursor: pointer;
+	}
+
+	button:hover {
+		border-color: var(--accent);
+	}
+</style>

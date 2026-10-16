@@ -9,6 +9,8 @@ const lessons = defineCollection({
 		day: z.number().int().min(1).max(3),
 		order: z.number().int(),
 		minutes: z.number().int().positive(),
+		/** Turn the Python blocks of this lesson into runnable editors. */
+		runnable: z.boolean().default(true),
 	}),
 });
 

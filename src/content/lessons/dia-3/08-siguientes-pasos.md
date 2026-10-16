@@ -3,6 +3,7 @@ title: Buen uso de la IA y siguientes pasos
 day: 3
 order: 8
 minutes: 5
+runnable: false
 ---
 
 ## Usar la IA con cabeza

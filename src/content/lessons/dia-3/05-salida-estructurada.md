@@ -3,6 +3,7 @@ title: Respuestas estructuradas
 day: 3
 order: 5
 minutes: 8
+runnable: false
 ---
 
 Ahora juntamos las dos piezas: un **agente** que en lugar de texto libre devuelve **objetos Pydantic**. Se consigue con el parámetro `output_type`.

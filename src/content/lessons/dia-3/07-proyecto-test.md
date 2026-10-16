@@ -3,6 +3,7 @@ title: "Proyecto (2/2): generador de tests"
 day: 3
 order: 7
 minutes: 12
+runnable: false
 ---
 
 Ahora la parte más divertida: que la IA nos **haga un test** sobre los apuntes y nos ponga nota.
