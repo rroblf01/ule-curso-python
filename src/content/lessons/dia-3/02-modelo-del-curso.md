@@ -12,6 +12,16 @@ Arriba del todo, en todos los temas de hoy, está el bloque **Modelo de IA**. De
 ```python
 from pydantic_ai import Agent
 
+# MODELO se crea arriba con OllamaModel + OllamaProvider porque Ollama está pensado
+# para ejecutarse en tu propio ordenador, y el nuestro está en un servidor (un VPS):
+# hay que decirle a Pydantic AI en qué dirección está.
+#
+# Con los proveedores oficiales basta con el texto "proveedor:modelo": Pydantic AI ya
+# sabe a qué servidor llamar (solo necesita tu clave de API). Por ejemplo:
+#     agente = Agent("openai:gpt-5.1-mini")
+#     agente = Agent("google:gemini-2.5-flash")
+# (También vale "ollama:granite4:350m", pero indicando el servidor en la variable de
+# entorno OLLAMA_BASE_URL.)
 agente = Agent(MODELO, instructions="Responde en español, en una frase.")
 resultado = await agente.run("¿Qué es una lista en Python?")
 print(resultado.output)
