@@ -113,19 +113,6 @@ for (const [key, info] of wanted) {
 lock.packages = Object.fromEntries(wanted);
 await writeFile(lockPath, JSON.stringify(lock));
 
-// Files worth warming up in the HTTP cache before Python is needed.
-const preload = [
-	'core.js',
-	...files.filter((file) => /^core-[\w-]+\.js$/.test(file)),
-	'pyodide/pyodide.mjs',
-	'pyodide/pyodide.asm.mjs',
-	'pyodide/pyodide.asm.wasm',
-	'pyodide/python_stdlib.zip',
-	'pyodide/pyodide-lock.json',
-	...wheels.filter((file) => /^(jedi|parso)-/.test(file)).map((file) => `pyodide/${file}`),
-];
-await writeFile(join(target, 'preload.json'), `${JSON.stringify(preload, null, '\t')}\n`);
-
 await writeFile(
 	join(target, 'README.md'),
 	`# Vendored PyScript ${version}

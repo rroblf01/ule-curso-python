@@ -248,7 +248,12 @@ export class Playground {
 			]),
 			EditorView.contentAttributes.of({ 'aria-label': 'Editor de código Python' }),
 			EditorView.updateListener.of((update) => {
-				if (update.focusChanged && update.view.hasFocus) runtime.start().catch(() => {});
+				if (update.focusChanged && update.view.hasFocus) {
+					runtime
+						.start()
+						.then(() => runtime.prepareAssist())
+						.catch(() => {});
+				}
 				if (update.docChanged) this.scheduleSave();
 			}),
 		];

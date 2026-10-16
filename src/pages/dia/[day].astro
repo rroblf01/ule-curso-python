@@ -96,61 +96,80 @@ const hasRunnable = lessons.some((lesson) => lesson.data.runnable);
 </Base>
 
 <script>
-	import { bootPythonWhenIdle, isRunnableBlock, mountPlaygrounds, mountStatusPanel } from '../../scripts/python';
+	import { isRunnableBlock, mountPlaygrounds, mountStatusPanel } from '../../scripts/python';
+	import { runtime } from '../../scripts/python/runtime';
 
-	const root = document.querySelector<HTMLElement>('[data-lessons]')!;
-	const lessons = [...root.querySelectorAll<HTMLElement>('[data-lesson]')];
-	const links = [...root.querySelectorAll<HTMLAnchorElement>('[data-topic]')];
-	const content = root.querySelector<HTMLElement>('.content')!;
+	function initDayPage() {
+		const root = document.querySelector<HTMLElement>('[data-lessons]');
+		if (!root) return;
 
-	root.classList.add('js');
+		// Everything registered here belongs to this page: undo it when the router leaves it.
+		const page = new AbortController();
+		document.addEventListener(
+			'astro:before-swap',
+			() => {
+				page.abort();
+				runtime.stop(); // never leave a block waiting for input() on a page that is gone
+			},
+			{ once: true },
+		);
 
-	function show(slug: string, scroll: boolean) {
-		const target = lessons.find((l) => l.dataset.lesson === slug) ?? lessons[0];
-		for (const lesson of lessons) lesson.hidden = lesson !== target;
-		mountPlaygrounds(target);
-		for (const link of links) {
-			const active = link.dataset.topic === target.dataset.lesson;
-			link.classList.toggle('active', active);
-			if (active) link.setAttribute('aria-current', 'true');
-			else link.removeAttribute('aria-current');
-		}
-		if (scroll) {
-			const top = content.getBoundingClientRect().top + window.scrollY - 80;
-			window.scrollTo({ top: Math.max(0, Math.min(window.scrollY, top)) });
-		}
-	}
+		const lessons = [...root.querySelectorAll<HTMLElement>('[data-lesson]')];
+		const links = [...root.querySelectorAll<HTMLAnchorElement>('[data-topic]')];
+		const content = root.querySelector<HTMLElement>('.content')!;
 
-	const statusPanel = root.querySelector<HTMLElement>('[data-python-status]');
-	if (statusPanel) {
-		mountStatusPanel(statusPanel);
-		bootPythonWhenIdle();
-	}
+		root.classList.add('js');
 
-	show(decodeURIComponent(location.hash.slice(1)), false);
-	window.addEventListener('hashchange', () => show(decodeURIComponent(location.hash.slice(1)), true));
-
-	// Copy button for every static code block (runnable ones become editors)
-	for (const pre of root.querySelectorAll<HTMLPreElement>('pre')) {
-		if (isRunnableBlock(pre)) continue;
-		const button = document.createElement('button');
-		button.type = 'button';
-		button.className = 'copy';
-		button.textContent = 'Copiar';
-		button.addEventListener('click', async () => {
-			try {
-				await navigator.clipboard.writeText(pre.querySelector('code')?.innerText ?? pre.innerText);
-				button.textContent = '¡Copiado!';
-			} catch {
-				button.textContent = 'Error';
+		function show(slug: string, scroll: boolean) {
+			const target = lessons.find((l) => l.dataset.lesson === slug) ?? lessons[0];
+			for (const lesson of lessons) lesson.hidden = lesson !== target;
+			mountPlaygrounds(target);
+			for (const link of links) {
+				const active = link.dataset.topic === target.dataset.lesson;
+				link.classList.toggle('active', active);
+				if (active) link.setAttribute('aria-current', 'true');
+				else link.removeAttribute('aria-current');
 			}
-			setTimeout(() => (button.textContent = 'Copiar'), 1500);
-		});
-		const wrapper = document.createElement('div');
-		wrapper.className = 'code-wrapper';
-		pre.replaceWith(wrapper);
-		wrapper.append(pre, button);
+			if (scroll) {
+				const top = content.getBoundingClientRect().top + window.scrollY - 80;
+				window.scrollTo({ top: Math.max(0, Math.min(window.scrollY, top)) });
+			}
+		}
+
+		const current = () => decodeURIComponent(location.hash.slice(1));
+		// The router turns links to #topic into history entries and fires popstate for them.
+		window.addEventListener('popstate', () => show(current(), true), { signal: page.signal });
+		window.addEventListener('hashchange', () => show(current(), true), { signal: page.signal });
+
+		const statusPanel = root.querySelector<HTMLElement>('[data-python-status]');
+		if (statusPanel) mountStatusPanel(statusPanel, page.signal);
+
+		show(current(), false);
+
+		// Copy button for every static code block (runnable ones become editors)
+		for (const pre of root.querySelectorAll<HTMLPreElement>('pre')) {
+			if (isRunnableBlock(pre)) continue;
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'copy';
+			button.textContent = 'Copiar';
+			button.addEventListener('click', async () => {
+				try {
+					await navigator.clipboard.writeText(pre.querySelector('code')?.innerText ?? pre.innerText);
+					button.textContent = '¡Copiado!';
+				} catch {
+					button.textContent = 'Error';
+				}
+				setTimeout(() => (button.textContent = 'Copiar'), 1500);
+			});
+			const wrapper = document.createElement('div');
+			wrapper.className = 'code-wrapper';
+			pre.replaceWith(wrapper);
+			wrapper.append(pre, button);
+		}
 	}
+
+	document.addEventListener('astro:page-load', initDayPage);
 </script>
 
 <style>

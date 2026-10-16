@@ -1,11 +1,5 @@
 import { Playground } from './playground';
-import { preloadPython } from './preload';
 import { runtime, type RuntimeStatus } from './runtime';
-
-/** Boot the interpreter in the background once the page has loaded. */
-export function bootPythonWhenIdle() {
-	preloadPython(() => runtime.start());
-}
 
 const RUNNABLE = 'pre[data-language="python"]:not([data-meta~="static"])';
 const mounted = new WeakMap<HTMLElement, Playground[]>();
@@ -41,7 +35,7 @@ const LABELS: Record<RuntimeStatus, string> = {
 };
 
 /** Small status panel: shows whether Python is loaded and lets students reset it. */
-export function mountStatusPanel(panel: HTMLElement) {
+export function mountStatusPanel(panel: HTMLElement, signal: AbortSignal) {
 	const label = panel.querySelector<HTMLElement>('[data-status-label]')!;
 	const dot = panel.querySelector<HTMLElement>('[data-status-dot]')!;
 	const load = panel.querySelector<HTMLButtonElement>('[data-action="load"]')!;
@@ -55,11 +49,15 @@ export function mountStatusPanel(panel: HTMLElement) {
 		reset.hidden = status !== 'ready' && status !== 'busy';
 	};
 
-	runtime.addEventListener('status', render);
-	runtime.addEventListener('reset', () => {
-		label.textContent = 'Variables borradas';
-		setTimeout(render, 1500);
-	});
+	runtime.addEventListener('status', render, { signal });
+	runtime.addEventListener(
+		'reset',
+		() => {
+			label.textContent = 'Variables borradas';
+			setTimeout(render, 1500);
+		},
+		{ signal },
+	);
 	load.addEventListener('click', () => runtime.start().catch(() => {}));
 	reset.addEventListener('click', () => runtime.reset());
 	if (!runtime.supported) {

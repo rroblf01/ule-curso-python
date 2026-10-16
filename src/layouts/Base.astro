@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import Navbar from '../components/Navbar.astro';
 
@@ -33,20 +34,29 @@ const {
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<title>{title} · Python en 3 días</title>
 		<script is:inline>
-			try {
-				const saved = localStorage.getItem('theme');
-				if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
-			} catch {}
+			// Restore the theme on first load and after every client-side navigation
+			// (the router replaces the attributes of <html>).
+			(() => {
+				const applyTheme = () => {
+					try {
+						const saved = localStorage.getItem('theme');
+						if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+					} catch {}
+				};
+				applyTheme();
+				document.addEventListener('astro:after-swap', applyTheme);
+			})();
 		</script>
+		<!-- Navigating without full page reloads keeps the Python worker alive between pages. -->
+		<ClientRouter />
 	</head>
 	<body>
 		<Navbar currentDay={currentDay} />
 		<slot />
 		<script>
-			import { preloadPython } from '../scripts/python/preload';
+			import { startPythonSoon } from '../scripts/python/preload';
 
-			// Pages without editors only warm up the browser cache; day pages boot Python themselves.
-			if (!document.querySelector('[data-python-status]')) preloadPython();
+			startPythonSoon();
 		</script>
 	</body>
 </html>

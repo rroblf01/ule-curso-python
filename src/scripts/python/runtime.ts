@@ -186,11 +186,24 @@ class PythonRuntime extends EventTarget {
 		script.remove();
 		this.setStatus('ready');
 
-		// Load jedi in the background so autocompletion is ready when needed.
-		this.warming = this.tool(async () => {
-			await worker.sync.warmup();
-			this.jediReady = true;
-		}).catch(() => {});
+	}
+
+	/**
+	 * Load jedi (autocompletion). It is not loaded in the background on purpose:
+	 * it would keep the worker busy for about a second and delay "Ejecutar".
+	 * Instead it loads when the student focuses an editor or asks for help.
+	 */
+	private loadJedi() {
+		if (!this.warming && this.worker) {
+			const worker = this.worker;
+			this.warming = this.exclusive(async () => {
+				await worker.sync.warmup();
+				this.jediReady = true;
+			}).catch(() => {
+				this.warming = null;
+			});
+		}
+		return this.warming;
 	}
 
 	private exclusive<T>(task: () => Promise<T>): Promise<T> {
@@ -275,11 +288,17 @@ class PythonRuntime extends EventTarget {
 		return Boolean(this.worker) && this.jediReady && !this.running && !this.toolBusy;
 	}
 
-	/** Like canAssist, but if jedi is still loading wait a little for it. */
-	private async assistReady(waitMs = 1500) {
+	/** The student is about to type in an editor: get autocompletion ready if Python is idle. */
+	prepareAssist() {
+		if (this.worker && !this.running && !this.jediReady) this.loadJedi();
+	}
+
+	/** Like canAssist, but if jedi is not loaded yet, load it now and wait a little for it. */
+	private async assistReady(waitMs = 3000) {
 		if (!this.worker || this.running) return false;
-		if (!this.jediReady && this.warming) {
-			await Promise.race([this.warming, new Promise((resolve) => setTimeout(resolve, waitMs))]);
+		if (!this.jediReady) {
+			const loading = this.loadJedi();
+			await Promise.race([loading, new Promise((resolve) => setTimeout(resolve, waitMs))]);
 		}
 		return this.canAssist;
 	}

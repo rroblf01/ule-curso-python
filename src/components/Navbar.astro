@@ -41,8 +41,7 @@ const { currentDay } = Astro.props;
 </header>
 
 <script>
-	const button = document.querySelector<HTMLButtonElement>('.navbar .theme');
-	button?.addEventListener('click', () => {
+	function toggleTheme() {
 		const root = document.documentElement;
 		const isDark =
 			root.dataset.theme === 'dark' ||
@@ -52,6 +51,11 @@ const { currentDay } = Astro.props;
 		try {
 			localStorage.setItem('theme', next);
 		} catch {}
+	}
+
+	// The navbar is replaced on every client-side navigation: bind the new button each time.
+	document.addEventListener('astro:page-load', () => {
+		document.querySelector<HTMLButtonElement>('.navbar .theme')?.addEventListener('click', toggleTheme);
 	});
 </script>
 
