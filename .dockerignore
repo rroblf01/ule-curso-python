@@ -1,0 +1,7 @@
+# Installed and generated inside the image: never copy the host versions
+# (node_modules has native binaries for the host, not for Alpine).
+node_modules
+dist
+.astro
+.git
+.vscode

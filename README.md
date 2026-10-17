@@ -82,6 +82,9 @@ Cross-Origin-Embedder-Policy: require-corp
 ```
 
 - `npm run dev` y `npm run preview` ya las envían (ver `astro.config.mjs`).
+- **Docker (gofly):** el [Dockerfile](Dockerfile) construye la web, precomprime los ficheros de texto (incluido `pyodide.asm.wasm`: 9,6 MB → 3,5 MB) y la sirve con [gofly](https://github.com/rroblf01/gofly). Su configuración se escribe en [nginx.conf](nginx.conf) y se convierte a JSON en la propia construcción (`gofly -convert`), así que solo puede usar lo que el conversor entiende: `location` por prefijo (no expresiones regulares), `root`/`alias` y `add_header`. Además de COOP/COEP, define la caché:
+  - `/_astro/` y `/vendor/`: un año, `immutable` (los nombres llevan un hash o la versión de PyScript). Sin esto, como gofly calcula el `ETag` con la fecha del fichero, **cada despliegue obligaba a volver a descargar los ~24 MB de Python**.
+  - El resto (páginas, `runner.py`, `mini-coi.js`): `no-cache`, el navegador revalida (304) y los cambios se ven al momento.
 - **Netlify / Cloudflare Pages:** las toma de [public/_headers](public/_headers).
 - **Vercel:** las toma de [vercel.json](vercel.json).
 - **GitHub Pages u otros sin control de cabeceras:** la página carga [mini-coi](https://github.com/WebReflection/mini-coi), un *service worker* que las añade (la primera visita se recarga sola una vez).
