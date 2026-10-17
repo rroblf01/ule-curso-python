@@ -73,6 +73,16 @@ interface XWorker {
 let pyscriptLoaded: Promise<void> | null = null;
 
 /**
+ * Add an element directly under <html>, outside <head> and <body>. Astro's
+ * ClientRouter replaces <body> (and prunes <head>) on every navigation: a
+ * PyScript <script> removed while Python is still booting never reports that it
+ * is ready, so navigating during the first seconds left Python "loading" forever.
+ */
+function outsidePageContent(element: HTMLElement) {
+	document.documentElement.append(element);
+}
+
+/**
  * Load PyScript core with a <script type="module"> tag. It cannot be an import()
  * from our own code: the files live in public/, which Vite refuses to serve as
  * source modules during development.
@@ -92,7 +102,7 @@ function loadPyScript() {
 			},
 			{ once: true },
 		);
-		document.head.append(script);
+		outsidePageContent(script);
 	});
 	return pyscriptLoaded;
 }
@@ -167,7 +177,7 @@ class PythonRuntime extends EventTarget {
 				{ once: true },
 			);
 		});
-		document.body.append(script);
+		outsidePageContent(script);
 		await done;
 
 		const worker = (script as unknown as { xworker: XWorker }).xworker;
