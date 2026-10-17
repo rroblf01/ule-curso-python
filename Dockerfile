@@ -21,18 +21,20 @@ RUN find /app/dist -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" -o
 # Stage 2: convert nginx.conf into gofly's config.json (needs a shell, the runtime image has none)
 FROM alpine:3 AS config
 
-COPY --from=ghcr.io/rroblf01/gofly:1.2.0 /gofly /gofly
+COPY --from=ghcr.io/rroblf01/gofly:1.3.0 /gofly /gofly
 COPY nginx.conf /nginx.conf
 
-# The converter does not map timeouts: give slow connections (a classroom sharing
-# one wifi) time to download the ~24 MB Python runtime instead of the default 30 s.
+# The converter always writes "write_timeout": "30s", and an explicit write_timeout
+# caps the total time of a response: a slow download of the ~24 MB Python runtime
+# would be cut (gofly 1.3.0). "0s" removes the cap; send_timeout (nginx.conf)
+# still drops clients that stop making progress.
 RUN /gofly -convert /nginx.conf > /config.json \
-    && sed -i 's/"write_timeout": "30s"/"write_timeout": "10m0s"/' /config.json \
-    && grep -q '"write_timeout": "10m0s"' /config.json \
+    && sed -i 's/"write_timeout": "30s"/"write_timeout": "0s"/' /config.json \
+    && grep -q '"write_timeout": "0s"' /config.json \
     && /gofly -t -config /config.json
 
 # Stage 3: production image
-FROM ghcr.io/rroblf01/gofly:1.2.0
+FROM ghcr.io/rroblf01/gofly:1.3.0
 
 COPY --from=config /config.json /etc/gofly/config.json
 COPY --from=builder /app/dist/ /www/
