@@ -3,9 +3,10 @@ import { days } from '../data/days';
 
 interface Props {
 	currentDay?: number;
+	playground?: boolean;
 }
 
-const { currentDay } = Astro.props;
+const { currentDay, playground = false } = Astro.props;
 ---
 
 <header class="navbar">
@@ -28,6 +29,25 @@ const { currentDay } = Astro.props;
 					</li>
 				))
 			}
+			<li>
+				<a
+					href="/playground/"
+					class:list={['day', 'playground', { active: playground }]}
+					aria-current={playground ? 'page' : undefined}
+					title="Playground: escribe y ejecuta tu propio código"
+				>
+					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+						<path
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2.2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="m8 7-5 5 5 5M16 7l5 5-5 5"></path>
+					</svg>
+					<span class="label">Playground</span>
+				</a>
+			</li>
 		</ul>
 		<button class="theme" type="button" aria-label="Cambiar tema claro/oscuro" title="Cambiar tema">
 			<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -106,6 +126,17 @@ const { currentDay } = Astro.props;
 		font-weight: 600;
 		border: 1px solid var(--border);
 		transition: background 0.15s, border-color 0.15s;
+	}
+
+	.playground {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	/* As tall as a line of text, so the icon-only button (mobile) matches the day buttons */
+	.playground svg {
+		height: 1lh;
 	}
 
 	.day:hover {

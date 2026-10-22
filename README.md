@@ -10,6 +10,7 @@ Web del curso introductorio de Python para estudiantes de 1.º de la Universidad
 
 Los alumnos no instalan nada:
 
+- Un **playground** (`/playground/`) para escribir código libremente: precarga Pydantic y Pydantic AI al entrar, tiene ejemplos (input(), clases, Pydantic, agentes de IA) y muestra los paquetes disponibles, leídos del `pyodide-lock.json` incluido en el proyecto.
 - Cada bloque de código es un editor que ejecuta Python en el navegador con [PyScript](https://pyscript.net) (Pyodide en un *web worker*). Incluye autocompletado y documentación en español, firmas de funciones, errores de sintaxis en vivo, errores de ejecución explicados, `input()`, `await` y botón para detener la ejecución.
 - **Día 3:** Pydantic AI también se ejecuta en el navegador y habla con un modelo abierto (`granite4:350m`) en un servidor Ollama del curso. Encima de cada tema del día hay un bloque **Modelo de IA** que define la variable `MODELO` con Pydantic AI tal cual.
 
@@ -41,6 +42,7 @@ src/
 ├── layouts/Base.astro
 └── pages/
     ├── index.astro       # Portada
+    ├── playground.astro  # Editor libre con los paquetes ya cargados (ejemplos en data/playground.ts)
     └── dia/[day].astro   # Temario a la izquierda, contenido a la derecha
 ```
 

@@ -1,0 +1,328 @@
+---
+import { pyscript } from '../../package.json';
+import PythonStatus from '../components/PythonStatus.astro';
+import { EXAMPLES, PRELOAD, STARTER, STDLIB } from '../data/playground';
+import Base from '../layouts/Base.astro';
+import '../styles/playground.css';
+
+// The Python packages bundled with the site (public/vendor), straight from Pyodide's lock file.
+type Lock = { packages: Record<string, { name: string; version: string; imports: string[] }> };
+const locks = import.meta.glob<Lock>('../../public/vendor/pyscript/*/pyodide/pyodide-lock.json', {
+	eager: true,
+	import: 'default',
+});
+const lock = locks[`../../public/vendor/pyscript/${pyscript.version}/pyodide/pyodide-lock.json`];
+if (!lock) throw new Error(`pyodide-lock.json not found for PyScript ${pyscript.version}: run npm run vendor:pyscript`);
+const packages = Object.values(lock.packages)
+	.map(({ name, version, imports }) => ({ name, version, imports }))
+	.sort((a, b) => a.name.localeCompare(b.name));
+const highlighted = packages.filter((pkg) => PRELOAD.packages.includes(pkg.name));
+---
+
+<Base
+	title="Playground"
+	description="Escribe y ejecuta Python en el navegador, con Pydantic y Pydantic AI ya disponibles."
+	playground
+>
+	<main class="page" data-playground data-preload={JSON.stringify(PRELOAD)}>
+		<header class="intro">
+			<p class="eyebrow">Playground</p>
+			<h1>Tu Python, en el navegador</h1>
+			<p class="lead">
+				Escribe y ejecuta lo que quieras. Funciona igual que los editores del curso: autocompletado, ayudas,
+				<code>input()</code>, <code>await</code> y tus cambios se guardan en el navegador.
+			</p>
+		</header>
+
+		<div class="layout">
+			<section class="workspace" aria-label="Editor">
+				<div class="examples" role="group" aria-label="Ejemplos">
+					<span>Ejemplos:</span>
+					{
+						EXAMPLES.map((example) => (
+							<button type="button" data-example={example.id}>
+								{example.label}
+							</button>
+						))
+					}
+				</div>
+				<div class="cell" data-runnable data-lesson="playground">
+					<pre data-language="python"><code>{STARTER}</code></pre>
+				</div>
+				<script
+					type="application/json"
+					data-examples
+					set:html={JSON.stringify(Object.fromEntries(EXAMPLES.map((e) => [e.id, e.code]))).replaceAll('<', '\\u003c')}
+				/>
+			</section>
+
+			<aside class="side">
+				<PythonStatus />
+
+				<section class="box" aria-labelledby="packages-title">
+					<h2 id="packages-title">Paquetes disponibles</h2>
+					<p class="hint">Ya están en la web: impórtalos sin instalar nada.</p>
+					<ul class="main-packages">
+						{
+							highlighted.map((pkg) => (
+								<li>
+									<code>import {pkg.imports[0]}</code>
+									<small>{pkg.name} {pkg.version}</small>
+								</li>
+							))
+						}
+					</ul>
+					<p class="preload" data-preload-status>Se cargan en segundo plano al abrir esta página.</p>
+
+					<p class="hint">Biblioteca estándar, por ejemplo:</p>
+					<p class="stdlib">{STDLIB.map((name) => <code>{name}</code>)}</p>
+
+					<details>
+						<summary>Todos los paquetes ({packages.length})</summary>
+						<ul class="all-packages">
+							{
+								packages.map((pkg) => (
+									<li>
+										<code>{pkg.imports.join(', ') || pkg.name}</code> <small>{pkg.version}</small>
+									</li>
+								))
+							}
+						</ul>
+					</details>
+
+					<p class="hint">
+						No disponibles en el navegador: paquetes con código nativo que no estén en la lista (por ejemplo
+						<code>numpy</code>). Para eso, usa Google Colab.
+					</p>
+				</section>
+			</aside>
+		</div>
+	</main>
+</Base>
+
+<script>
+	import { mountPlaygrounds, mountStatusPanel } from '../scripts/python';
+	import { runtime } from '../scripts/python/runtime';
+
+	function initPlaygroundPage() {
+		const root = document.querySelector<HTMLElement>('[data-playground]');
+		if (!root) return;
+		const page = new AbortController();
+		document.addEventListener(
+			'astro:before-swap',
+			() => {
+				page.abort();
+				runtime.stop();
+			},
+			{ once: true },
+		);
+
+		const statusPanel = root.querySelector<HTMLElement>('[data-python-status]');
+		if (statusPanel) mountStatusPanel(statusPanel, page.signal);
+
+		const [editor] = mountPlaygrounds(root.querySelector<HTMLElement>('[data-runnable]')!);
+		const examples: Record<string, string> = JSON.parse(
+			root.querySelector<HTMLScriptElement>('script[data-examples]')!.textContent!,
+		);
+		for (const button of root.querySelectorAll<HTMLButtonElement>('[data-example]')) {
+			button.addEventListener(
+				'click',
+				() => {
+					const code = examples[button.dataset.example!];
+					if (!code || !editor) return;
+					const dirty = editor.code.trim() !== '' && !Object.values(examples).includes(editor.code);
+					if (dirty && !confirm('Se sustituirá el código del editor por el ejemplo. ¿Continuar?')) return;
+					editor.setCode(code);
+				},
+				{ signal: page.signal },
+			);
+		}
+
+		// Load Pydantic and Pydantic AI in the background, so the first import is instant.
+		const preload: { packages: string[]; modules: string[] } = JSON.parse(root.dataset.preload!);
+		const status = root.querySelector<HTMLElement>('[data-preload-status]')!;
+		status.textContent = 'Cargando paquetes en segundo plano…';
+		runtime
+			.preload(preload.packages, preload.modules)
+			.then(() => {
+				if (!page.signal.aborted) status.textContent = '✓ Cargados: el primer import será instantáneo.';
+			})
+			.catch(() => {
+				if (!page.signal.aborted) status.textContent = 'Se cargarán la primera vez que los importes.';
+			});
+	}
+
+	document.addEventListener('astro:page-load', initPlaygroundPage);
+</script>
+
+<style>
+	.page {
+		max-width: 1280px;
+		margin: 0 auto;
+		padding: 32px 16px 64px;
+	}
+
+	.intro {
+		max-width: 760px;
+		margin-bottom: 24px;
+	}
+
+	.eyebrow {
+		margin: 0 0 6px;
+		color: var(--muted);
+		font-size: 0.8rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	h1 {
+		margin: 0 0 10px;
+		font-size: clamp(1.8rem, 5vw, 2.6rem);
+		line-height: 1.15;
+	}
+
+	.lead {
+		margin: 0;
+		color: var(--muted);
+	}
+
+	code {
+		padding: 0.1em 0.35em;
+		border-radius: 5px;
+		background: var(--surface-2);
+		font: 0.88em var(--mono);
+	}
+
+	.layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 300px;
+		gap: 24px;
+		align-items: start;
+	}
+
+	.examples {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 12px;
+		font-size: 0.85rem;
+	}
+
+	.examples span {
+		color: var(--muted);
+	}
+
+	.examples button {
+		padding: 5px 12px;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		background: var(--surface);
+		color: var(--text);
+		font: 600 0.8rem var(--font);
+		cursor: pointer;
+	}
+
+	.examples button:hover {
+		border-color: var(--accent);
+	}
+
+	/* A taller editor than in the lessons */
+	.cell :global(.cm-content),
+	.cell :global(.cm-gutter) {
+		min-height: 45vh;
+	}
+
+	.cell :global(.pg-editor .cm-editor) {
+		max-height: 75vh;
+	}
+
+	.side {
+		position: sticky;
+		top: calc(var(--nav-h) + 24px);
+	}
+
+	.side :global(.python-status) {
+		margin-top: 0;
+	}
+
+	.box {
+		margin-top: 12px;
+		padding: 14px 16px;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		background: var(--surface);
+		font-size: 0.88rem;
+	}
+
+	.box h2 {
+		margin: 0 0 4px;
+		font-size: 1rem;
+	}
+
+	.hint {
+		margin: 10px 0 6px;
+		color: var(--muted);
+		font-size: 0.82rem;
+		line-height: 1.45;
+	}
+
+	.main-packages,
+	.all-packages {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.main-packages li {
+		display: flex;
+		flex-direction: column;
+		margin-bottom: 6px;
+	}
+
+	.main-packages small,
+	.all-packages small {
+		color: var(--muted);
+	}
+
+	.preload {
+		margin: 4px 0 0;
+		color: var(--muted);
+		font-size: 0.8rem;
+	}
+
+	.stdlib {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		margin: 0;
+	}
+
+	details {
+		margin-top: 10px;
+	}
+
+	summary {
+		color: var(--accent);
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.all-packages {
+		margin-top: 6px;
+		max-height: 220px;
+		overflow: auto;
+		font-size: 0.8rem;
+		line-height: 1.7;
+	}
+
+	@media (max-width: 900px) {
+		.layout {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.side {
+			position: static;
+		}
+	}
+</style>

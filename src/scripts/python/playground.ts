@@ -273,6 +273,13 @@ export class Playground {
 		this.root.classList.toggle('pg-edited', this.code !== this.original);
 	}
 
+	/** Replace the code (e.g. with an example), keeping it saved like an edit. */
+	setCode(code: string) {
+		this.view.dispatch({ changes: { from: 0, to: this.view.state.doc.length, insert: code } });
+		this.clearOutput();
+		this.view.focus();
+	}
+
 	private restore() {
 		this.view.dispatch({ changes: { from: 0, to: this.view.state.doc.length, insert: this.original } });
 		storageSet(this.storageKey, null);

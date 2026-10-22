@@ -317,6 +317,15 @@ class PythonRuntime extends EventTarget {
 		return Boolean(this.worker) && this.jediReady && !this.running && !this.toolBusy;
 	}
 
+	/**
+	 * Load packages and import modules in the background, so that the first block
+	 * that uses them runs at once. Queued like a block: a block run meanwhile waits.
+	 */
+	async preload(packages: string[], modules: string[]) {
+		await this.start();
+		await this.exclusive(() => this.worker!.sync.preload(packages, modules));
+	}
+
 	/** The student is about to type in an editor: get autocompletion ready if Python is idle. */
 	prepareAssist() {
 		if (this.worker && !this.running && !this.jediReady) this.loadJedi();

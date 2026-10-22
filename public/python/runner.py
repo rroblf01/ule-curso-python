@@ -483,6 +483,16 @@ def _script(code):
     return _jedi.Interpreter(code, [NS])
 
 
+async def preload(packages, modules):
+    """Load Pyodide packages and import modules ahead of time (the playground page)."""
+    import importlib
+
+    await pyodide_js.loadPackage(to_js(list(packages)), to_js({"messageCallback": lambda _: None}, dict_converter=js.Object.fromEntries))
+    for name in modules:
+        importlib.import_module(name)
+    return "ok"
+
+
 async def warmup():
     jedi = await _load_jedi()
     jedi.Interpreter("pri", [NS]).complete(1, 3)
@@ -567,6 +577,7 @@ sync.check = check
 sync.reset = reset
 sync.set_interrupt_buffer = set_interrupt_buffer
 sync.warmup = warmup
+sync.preload = preload
 sync.complete = complete
 sync.completion_doc = completion_doc
 sync.signatures = signatures
