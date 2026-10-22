@@ -71,7 +71,7 @@ La web no depende de ningún CDN: PyScript, el intérprete Pyodide y los paquete
 - Se generan con `npm run vendor:pyscript`, que descarga el [paquete offline oficial](https://docs.pyscript.net/2026.7.3/user-guide/offline/) de la versión indicada en el campo `pyscript` de `package.json` y resuelve los paquetes con `micropip` ejecutando ese mismo Pyodide en Node (como lo haría el navegador). Los descarga de la distribución de Pyodide o de PyPI comprobando su SHA-256 y los añade a `pyodide-lock.json`, de modo que un `import` los carga solo.
 - Para actualizar PyScript o añadir un paquete de Pyodide, cambia `pyscript.version` o `pyscript.packages` en `package.json` y vuelve a ejecutar el comando.
 - Python arranca **en diferido nada más entrar en la web** (en cualquier página, también la portada), en un *web worker*. La web usa el router de Astro (`<ClientRouter />`), así que al cambiar de página no se recarga el documento y **el mismo intérprete sigue vivo**: pasar de la portada a un día, o de un día a otro, no vuelve a cargar Python y las variables se conservan.
-- `jedi` (autocompletado) no se carga en segundo plano para no ocupar el worker justo cuando el alumno pulsa **Ejecutar**: se carga al hacer clic en un editor.
+- Después, también en segundo plano, se cargan Pydantic y Pydantic AI (ver [src/data/preload.ts](src/data/preload.ts)) y `jedi` (autocompletado), en pasos cortos y solo cuando el alumno no está ejecutando bloques, para no retrasar **Ejecutar**. Así el primer agente de IA no paga la carga de los paquetes.
 - Si el usuario tiene activado el ahorro de datos, Python se carga al usar un editor.
 
 ## Despliegue

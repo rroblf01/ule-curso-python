@@ -1,16 +1,12 @@
 import { AI_DEFAULTS } from './ai';
 
+export { PRELOAD } from './preload';
+
 export interface Example {
 	id: string;
 	label: string;
 	code: string;
 }
-
-/** Packages the playground loads in the background, and modules it imports. */
-export const PRELOAD = {
-	packages: ['pydantic', 'pydantic-ai-slim'],
-	modules: ['pydantic', 'pydantic_ai'],
-};
 
 /** Standard library modules worth pointing out to students. */
 export const STDLIB = ['math', 'random', 'statistics', 'datetime', 'json', 're', 'collections', 'itertools', 'string', 'time'];

@@ -120,6 +120,10 @@ class PythonRuntime extends EventTarget {
 	private toolBusy = false;
 	private jediReady = false;
 	private warming: Promise<unknown> | null = null;
+	private preloading: Promise<void> | null = null;
+	/** Blocks waiting to run (Python still booting or another block running). */
+	private waitingRuns = 0;
+	private lastRunEnd = 0;
 	private hardStop: ReturnType<typeof setTimeout> | null = null;
 	private restartResolve: ((result: RunResult) => void) | null = null;
 
@@ -231,8 +235,15 @@ class PythonRuntime extends EventTarget {
 
 	/** Run a block of code. Blocks are queued and run one after another. */
 	async run(code: string, handlers: RunHandlers): Promise<RunResult> {
-		await this.start();
+		this.waitingRuns++;
+		try {
+			await this.start();
+		} catch (error) {
+			this.waitingRuns = Math.max(0, this.waitingRuns - 1);
+			throw error;
+		}
 		return this.exclusive(async () => {
+			this.waitingRuns = Math.max(0, this.waitingRuns - 1);
 			const worker = this.worker!;
 			this.handlers = handlers;
 			this.running = true;
@@ -251,6 +262,7 @@ class PythonRuntime extends EventTarget {
 				this.handlers = null;
 				this.pendingAsk = null;
 				this.running = false;
+				this.lastRunEnd = performance.now();
 				if (this.status === 'busy') this.setStatus('ready');
 			}
 		});
@@ -289,6 +301,8 @@ class PythonRuntime extends EventTarget {
 		this.starting = null;
 		this.jediReady = false;
 		this.warming = null;
+		this.preloading = null;
+		this.waitingRuns = 0;
 		this.queue = Promise.resolve();
 		this.restartResolve?.({ status: 'restarted', error: null });
 		this.dispatchEvent(new Event('restarted'));
@@ -319,11 +333,35 @@ class PythonRuntime extends EventTarget {
 
 	/**
 	 * Load packages and import modules in the background, so that the first block
-	 * that uses them runs at once. Queued like a block: a block run meanwhile waits.
+	 * that uses them runs at once, and then jedi (autocompletion). It goes in small
+	 * steps (load a package, import a module) and only while the student is not
+	 * running blocks: each step waits until no block is waiting and none has run for
+	 * a moment, since a step cannot be interrupted (importing pydantic_ai takes ~2 s).
+	 * Calling it again returns the same promise.
 	 */
-	async preload(packages: string[], modules: string[]) {
-		await this.start();
-		await this.exclusive(() => this.worker!.sync.preload(packages, modules));
+	preload(packages: string[], modules: string[]): Promise<void> {
+		this.preloading ??= (async () => {
+			await this.start();
+			const steps = [
+				...packages.map((name) => () => this.worker!.sync.preload([name], [])),
+				...modules.map((name) => () => this.worker!.sync.preload([], [name])),
+			];
+			for (const step of steps) {
+				await this.whenStudentIsIdle();
+				await this.exclusive(step);
+			}
+			await this.whenStudentIsIdle();
+			await this.loadJedi();
+		})().catch((error) => {
+			this.preloading = null;
+			throw error;
+		});
+		return this.preloading;
+	}
+
+	private async whenStudentIsIdle(quietMs = 1500) {
+		const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+		while (this.waitingRuns > 0 || this.running || performance.now() - this.lastRunEnd < quietMs) await sleep(200);
 	}
 
 	/** The student is about to type in an editor: get autocompletion ready if Python is idle. */
